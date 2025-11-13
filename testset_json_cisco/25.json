@@ -1,0 +1,9 @@
+{
+  "topology": "简化的基本BGP场景（原为配置BGP按路由策略迭代下一跳）：两台路由器DeviceA（AS 100）和DeviceB（AS 200）通过10.1.1.0/24直连建立eBGP邻居。DeviceA发布测试路由172.16.1.0/24。",
+  "requirement": "配置基本eBGP邻居关系和路由发布。DeviceA与DeviceB建立eBGP邻居，DeviceA通过network命令发布172.16.1.0/24路由。验证基本BGP功能。",
+  "verification": "验证eBGP会话建立；验证路由学习和可达性。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与DeviceB的eBGP邻居" },
+    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "172.16.1.0/24", "description": "DeviceB应学到DeviceA的路由" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "topology": "简化场景（原为配置BGP Auto FRR快速重路由）：三台路由器，DeviceA（AS 100）通过两条路径连接AS 200的DeviceB和DeviceC，验证BGP多路径场景。",
+  "requirement": "配置BGP多路径。DeviceA分别与DeviceB、DeviceC建立eBGP邻居，两者都发布相同的路由，实现路径冗余。注：原场景涉及Auto FRR快速重路由功能，此为简化版本。",
+  "verification": "验证所有BGP会话建立；验证路由学习。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与DeviceB的eBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA与DeviceC的eBGP邻居" }
+  ]
+}

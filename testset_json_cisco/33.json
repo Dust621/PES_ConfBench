@@ -1,0 +1,8 @@
+{
+  "topology": "简化场景（原为配置BGP动态对等体组）：两台路由器DeviceA和DeviceB建立BGP邻居。",
+  "requirement": "配置基本BGP邻居关系。注：原场景涉及BGP动态对等体组（Dynamic Peer Group）功能，允许通过网段自动建立BGP邻居，为高级特性，此为简化版本。",
+  "verification": "验证BGP会话建立。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与DeviceB的BGP邻居" }
+  ]
+}

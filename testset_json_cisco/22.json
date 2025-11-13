@@ -1,0 +1,15 @@
+{
+  "topology": "两个自治系统：AS 100包含DeviceA（1.0.0.1）和DeviceB（2.0.0.2），AS 200包含DeviceC（3.0.0.3）、DeviceD（4.0.0.4）、DeviceE（5.0.0.5）。DeviceA通过10.1.1.0/24连接DeviceC，通过10.1.2.0/24连接DeviceD，还连接本地网段172.16.1.0/24。DeviceB通过10.1.3.0/24连接DeviceC（或使用LoopBack多跳），也连接本地网段172.16.1.0/24。AS 200内部：DeviceC通过10.1.4.0/24连接DeviceE，DeviceD通过10.1.5.0/24连接DeviceE。",
+  "requirement": "配置BGP多路径负载分担。DeviceA和DeviceB分别与AS 200建立eBGP连接，都发布172.16.1.0/24网段。AS 200内部DeviceC、DeviceD与DeviceE建立iBGP连接。DeviceE配置负载分担功能（maximum load-balancing 2），可以通过DeviceC和DeviceD两条路径访问172.16.1.0/24，实现跨多个AS入口的流量均衡。",
+  "verification": "验证所有BGP会话为Established状态；验证DeviceE通过两条路径学到172.16.1.0/24路由；验证DeviceC和DeviceD都学到172.16.1.0/24；验证DeviceE可达172.16.1.0/24网段。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA(AS 100)与DeviceC(AS 200)的eBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "DeviceA(AS 100)与DeviceD(AS 200)的eBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceC", "b_node": "DeviceE", "expect": "ESTABLISHED", "description": "AS 200内部DeviceC-DeviceE的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceD", "b_node": "DeviceE", "expect": "ESTABLISHED", "description": "AS 200内部DeviceD-DeviceE的iBGP邻居" },
+    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.1.0/24", "description": "DeviceC应学到172.16.1.0/24路由" },
+    { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "172.16.1.0/24", "description": "DeviceD应学到172.16.1.0/24路由" },
+    { "type": "bgp_rib_contains", "node": "DeviceE", "prefix": "172.16.1.0/24", "description": "DeviceE应学到172.16.1.0/24路由" },
+    { "type": "reachability", "src_node": "DeviceE", "dst_ip": "172.16.1.4", "description": "DeviceE可达AS 100的业务网段" }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "topology": "两个自治系统：AS 65008包含DeviceA（边界路由器），AS 65009包含DeviceB（边界路由器）、DeviceC、DeviceD。DeviceA（1.1.1.1/32）通过192.168.0.1/24连接DeviceB（192.168.0.2/24），DeviceA还有内网172.16.0.0/16。AS 65009内部：DeviceB（2.2.2.2/32）、DeviceC（3.3.3.3/32）、DeviceD（4.4.4.4/32）形成三角形拓扑，通过10.1.1.0/24、10.1.2.0/24、10.1.3.0/24互联。",
+  "requirement": "配置跨AS的BGP路由交换。DeviceA与DeviceB建立eBGP邻居关系。AS 65009内部三台路由器建立全网状iBGP，使用LoopBack接口作为BGP更新源。AS 65009内部运行OSPF确保iBGP邻居可达。DeviceA通过network命令发布内网路由，DeviceB通过import-route引入直连路由。",
+  "verification": "验证eBGP会话DeviceA-DeviceB为Established状态；验证AS 65009内部iBGP会话全部Established；验证AS 65009内部OSPF邻居关系正常；验证DeviceA的BGP RIB中有AS 65009的路由，AS 65009内部设备BGP RIB中有DeviceA的172.16.0.0/16路由。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA(AS 65008)与DeviceB(AS 65009)的eBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "AS 65009内部DeviceB-DeviceC的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "AS 65009内部DeviceB-DeviceD的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceC", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "AS 65009内部DeviceC-DeviceD的iBGP邻居" },
+    { "type": "ospf_neighbor_count", "node": "DeviceB", "expect": 2, "description": "DeviceB应与DeviceC和DeviceD建立OSPF邻居" },
+    { "type": "ospf_neighbor_count", "node": "DeviceC", "expect": 2, "description": "DeviceC应与DeviceB和DeviceD建立OSPF邻居" },
+    { "type": "ospf_neighbor_count", "node": "DeviceD", "expect": 2, "description": "DeviceD应与DeviceB和DeviceC建立OSPF邻居" },
+    { "type": "ospf_area_contains", "area": "0", "nodes": ["DeviceB", "DeviceC", "DeviceD"], "description": "AS 65009内部三台设备均在OSPF area 0" },
+    { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "10.1.1.0/24", "description": "DeviceA应学到AS 65009的内部网段" },
+    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.0.0/16", "description": "DeviceC应学到DeviceA的内网路由" },
+    { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "172.16.0.0/16", "description": "DeviceD应学到DeviceA的内网路由" },
+    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "2.2.2.2", "description": "DeviceA可达DeviceB的LoopBack" },
+    { "type": "reachability", "src_node": "DeviceC", "dst_ip": "1.1.1.1", "description": "DeviceC可达DeviceA的LoopBack" }
+  ]
+}

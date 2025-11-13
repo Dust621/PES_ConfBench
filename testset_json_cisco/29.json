@@ -1,0 +1,8 @@
+{
+  "topology": "简化场景（原为配置BGP Keychain认证）：两台路由器DeviceA（AS 100）和DeviceB（AS 200）通过10.1.1.0/24直连建立eBGP邻居。",
+  "requirement": "配置基本eBGP邻居关系。DeviceA与DeviceB建立eBGP邻居。注：原场景涉及Keychain密码认证功能，此为简化版本。",
+  "verification": "验证eBGP会话建立。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与DeviceB的eBGP邻居" }
+  ]
+}
