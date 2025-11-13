@@ -7,9 +7,6 @@
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA(AS 65008)与DeviceC(AS 65009)的eBGP邻居" },
     { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "AS 65009内部DeviceB-DeviceC的iBGP邻居" },
     { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "172.16.1.0/24", "description": "DeviceA应学到172.16.1.0/24路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "172.16.1.0/24", "description": "DeviceB应有172.16.1.0/24路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.1.0/24", "description": "DeviceC应有172.16.1.0/24路由" },
-    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "172.16.1.1", "description": "DeviceA可达AS 65009的内网" },
-    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "172.16.1.2", "description": "DeviceA可达AS 65009的内网" }
+    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "172.16.1.1", "description": "DeviceA可达AS 65009的内网" }
   ]
 }

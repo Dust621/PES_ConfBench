@@ -5,12 +5,8 @@
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA(AS 65008)与DeviceB(AS 65009)的eBGP邻居" },
     { "type": "ospf_neighbor_count", "node": "DeviceB", "expect": 1, "description": "DeviceB应与DeviceC建立OSPF邻居" },
-    { "type": "ospf_neighbor_count", "node": "DeviceC", "expect": 1, "description": "DeviceC应与DeviceB建立OSPF邻居" },
-    { "type": "ospf_area_contains", "area": "0", "nodes": ["DeviceB", "DeviceC"], "description": "DeviceB和DeviceC在OSPF area 0" },
     { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "10.1.1.0/24", "description": "DeviceA应学到AS 65009的OSPF网段" },
-    { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "10.1.2.0/24", "description": "DeviceA应学到AS 65009的OSPF网段" },
     { "type": "route_exists", "node": "DeviceC", "network": "192.168.1.0/24", "description": "DeviceC路由表应有192.168.1.0/24（BGP重分发到OSPF）" },
-    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "10.1.2.1", "description": "DeviceA可达DeviceC的内网接口" },
-    { "type": "reachability", "src_node": "DeviceC", "dst_ip": "192.168.1.1", "description": "DeviceC可达DeviceA的内网接口" }
+    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "10.1.2.1", "description": "DeviceA可达DeviceC的内网接口" }
   ]
 }

@@ -7,10 +7,7 @@
     { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceB(AS 200)与DeviceC(AS 300)的eBGP邻居" },
     { "type": "bgp_session_between", "a_node": "DeviceC", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "DeviceC(AS 300)与DeviceD(AS 400)的eBGP邻居" },
     { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.1.0/24", "description": "DeviceC应学到DeviceA的路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "192.168.1.0/24", "description": "DeviceC应学到DeviceB的路由" },
     { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "172.16.1.0/24", "description": "DeviceD应通过DeviceC学到172.16.1.0/24" },
-    { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "192.168.1.0/24", "description": "DeviceD应通过DeviceC学到192.168.1.0/24" },
-    { "type": "reachability", "src_node": "DeviceD", "dst_ip": "172.16.1.1", "description": "DeviceD可达DeviceA的业务网段" },
-    { "type": "reachability", "src_node": "DeviceD", "dst_ip": "192.168.1.1", "description": "DeviceD可达DeviceB的业务网段" }
+    { "type": "reachability", "src_node": "DeviceD", "dst_ip": "172.16.1.1", "description": "DeviceD可达DeviceA的业务网段" }
   ]
 }

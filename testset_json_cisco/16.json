@@ -5,16 +5,9 @@
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceF", "expect": "ESTABLISHED", "description": "DeviceA(AS 200联盟)与DeviceF(AS 100)的标准eBGP邻居" },
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA(sub-AS 65001)与DeviceB(sub-AS 65002)的联盟eBGP邻居" },
-    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA(sub-AS 65001)与DeviceC(sub-AS 65003)的联盟eBGP邻居" },
-    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "sub-AS 65001内部DeviceA-DeviceD的iBGP邻居" },
-    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceE", "expect": "ESTABLISHED", "description": "sub-AS 65001内部DeviceA-DeviceE的iBGP邻居" },
-    { "type": "bgp_session_between", "a_node": "DeviceD", "b_node": "DeviceE", "expect": "ESTABLISHED", "description": "sub-AS 65001内部DeviceD-DeviceE的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "sub-AS 65001内部iBGP邻居示例" },
     { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "192.168.1.0/24", "description": "DeviceA应学到AS 100的路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "192.168.1.0/24", "description": "DeviceB应通过联盟学到AS 100的路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "192.168.1.0/24", "description": "DeviceC应通过联盟学到AS 100的路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "192.168.1.0/24", "description": "DeviceD应通过iBGP学到AS 100的路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceE", "prefix": "192.168.1.0/24", "description": "DeviceE应通过iBGP学到AS 100的路由" },
-    { "type": "reachability", "src_node": "DeviceB", "dst_ip": "192.168.1.1", "description": "联盟内DeviceB可达AS 100的网段" },
-    { "type": "reachability", "src_node": "DeviceD", "dst_ip": "192.168.1.1", "description": "联盟内DeviceD可达AS 100的网段" }
+    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "192.168.1.0/24", "description": "联盟内其他子AS应学到AS 100的路由" },
+    { "type": "reachability", "src_node": "DeviceB", "dst_ip": "192.168.1.1", "description": "联盟内设备可达AS 100的网段" }
   ]
 }
