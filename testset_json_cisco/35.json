@@ -1,0 +1,8 @@
+{
+  "topology": "简化场景（原为配置BGP SR LSP段路由标签交换路径）：两台路由器DeviceA和DeviceB建立BGP邻居。",
+  "requirement": "配置基本BGP邻居关系。注：原场景涉及BGP SR LSP（Segment Routing Label Switched Path）段路由MPLS标签路径功能，为非常高级的MPLS-SR特性，此为简化版本。",
+  "verification": "验证BGP会话建立。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与DeviceB的BGP邻居" }
+  ]
+}

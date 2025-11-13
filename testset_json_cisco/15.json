@@ -1,0 +1,16 @@
+{
+  "topology": "AS 65010内部采用路由反射器架构，包含4台核心设备。DeviceA（1.1.1.1）作为非客户端路由器，通过10.1.1.0/24连接DeviceB，通过10.1.3.0/24连接DeviceC，对外发布172.16.1.0/24网段。DeviceB（2.2.2.2）作为路由反射器（Cluster 1），通过10.1.2.0/24与DeviceC互联，通过10.1.4.0/24连接客户端DeviceD。DeviceC（3.3.3.3）作为路由反射器（Cluster 2）。DeviceD（4.4.4.4）作为DeviceB的反射客户端。",
+  "requirement": "配置BGP路由反射器，避免AS内部全网状iBGP连接。DeviceA与两个路由反射器DeviceB、DeviceC建立iBGP邻居。DeviceB和DeviceC互为非客户端iBGP邻居。DeviceB配置reflect-client将DeviceD设为客户端（Cluster ID 1）。DeviceC配置为路由反射器（Cluster ID 2）。DeviceA通过network命令发布172.16.1.0/24，该路由应通过路由反射器传递到客户端DeviceD。",
+  "verification": "验证所有iBGP会话为Established状态；验证DeviceD通过路由反射器学到DeviceA发布的172.16.1.0/24路由；验证路由反射器正常工作，DeviceD无需与DeviceA直接建立iBGP即可学到路由。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与路由反射器DeviceB的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA与路由反射器DeviceC的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "两个路由反射器之间的iBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "路由反射器DeviceB与客户端DeviceD的iBGP邻居" },
+    { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "172.16.1.0/24", "description": "DeviceA应有自己发布的路由" },
+    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "172.16.1.0/24", "description": "路由反射器DeviceB应学到172.16.1.0/24" },
+    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.1.0/24", "description": "路由反射器DeviceC应学到172.16.1.0/24" },
+    { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "172.16.1.0/24", "description": "客户端DeviceD应通过路由反射学到172.16.1.0/24" },
+    { "type": "reachability", "src_node": "DeviceD", "dst_ip": "172.16.1.1", "description": "客户端DeviceD可达DeviceA发布的网段" }
+  ]
+}

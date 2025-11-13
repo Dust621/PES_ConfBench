@@ -1,0 +1,15 @@
+{
+  "topology": "两个自治系统：AS 65008包含DeviceA，AS 65009包含DeviceB和DeviceC。DeviceA分别与DeviceB和DeviceC建立eBGP连接：DeviceA-DeviceB通过10.1.1.0/24链路（DeviceA: 10.1.1.2, DeviceB: 10.1.1.1），DeviceA-DeviceC通过10.1.2.0/24链路（DeviceA: 10.1.2.2, DeviceC: 10.1.2.1）。AS 65009内部DeviceB（172.16.1.1/24）与DeviceC（172.16.1.2/24）通过iBGP连接。",
+  "requirement": "配置BGP的MED属性控制路由选择。DeviceA与DeviceB、DeviceC分别建立eBGP邻居，DeviceB与DeviceC建立iBGP邻居。AS 65009通过network命令发布172.16.1.0/24网段。DeviceB向DeviceA发送路由时通过route-policy设置MED=100，DeviceC保持默认MED。DeviceA应优选从DeviceC学到的路由（MED更低）作为访问172.16.1.0/24的最优路径。",
+  "verification": "验证所有BGP会话为Established状态；验证DeviceA的BGP RIB中有172.16.1.0/24路由；验证从DeviceA可达172.16.1.0/24网段。",
+  "verification_tasks": [
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA(AS 65008)与DeviceB(AS 65009)的eBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA(AS 65008)与DeviceC(AS 65009)的eBGP邻居" },
+    { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "AS 65009内部DeviceB-DeviceC的iBGP邻居" },
+    { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "172.16.1.0/24", "description": "DeviceA应学到172.16.1.0/24路由" },
+    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "172.16.1.0/24", "description": "DeviceB应有172.16.1.0/24路由" },
+    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.1.0/24", "description": "DeviceC应有172.16.1.0/24路由" },
+    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "172.16.1.1", "description": "DeviceA可达AS 65009的内网" },
+    { "type": "reachability", "src_node": "DeviceA", "dst_ip": "172.16.1.2", "description": "DeviceA可达AS 65009的内网" }
+  ]
+}
