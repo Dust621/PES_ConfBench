@@ -1,6 +1,6 @@
 {
   "topology": "两个自治系统：AS 100包含DeviceA（1.1.1.1），AS 200包含DeviceB（2.2.2.2）、DeviceC（3.3.3.3）、DeviceD（4.4.4.4）。DeviceA（192.168.1.1/24）与DeviceB（192.168.1.2/24）通过eBGP互联。AS 200内部：DeviceB通过192.168.2.0/24连接DeviceC（192.168.2.2/24），通过192.168.3.0/24连接DeviceD（192.168.3.2/24），三者运行OSPF area 0和iBGP。DeviceA配置静态路由172.16.16.0/24到172.16.20.0/24指向NULL0。",
-  "requirement": "配置路由策略控制BGP路由的发布和接收。DeviceA通过import-route static引入静态路由到BGP，并配置出口过滤策略（filter-policy export）仅向DeviceB发布172.16.17.0/24、172.16.18.0/24、172.16.19.0/24三条路由（过滤掉172.16.16.0/24和172.16.20.0/24）。DeviceC配置入口过滤策略（filter-policy import）仅接收172.16.18.0/24路由。DeviceD不配置过滤，接收DeviceB的所有路由。实现精细化路由控制。",
+  "requirement": "配置路由策略控制BGP路由的发布和接收。DeviceA通过import-route static引入静态路由到BGP，并配置出口过滤策略仅向DeviceB发布172.16.17.0/24、172.16.18.0/24、172.16.19.0/24三条路由（过滤掉172.16.16.0/24和172.16.20.0/24）。DeviceC配置入口过滤策略仅接收172.16.18.0/24路由。DeviceD不配置过滤，接收DeviceB的所有路由。实现精细化路由控制。",
   "verification": "验证所有BGP会话为Established状态；验证AS 200内部OSPF邻居关系正常；验证DeviceB学到172.16.17.0/24、172.16.18.0/24、172.16.19.0/24三条路由；验证DeviceC只接收到172.16.18.0/24路由；验证DeviceD接收到所有三条路由。",
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA(AS 100)与DeviceB(AS 200)的eBGP邻居" },

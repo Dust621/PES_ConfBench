@@ -1,6 +1,6 @@
 {
   "topology": "两个自治系统：AS 100包含DeviceA（1.1.1.1边界路由器）和DeviceB（2.2.2.2），AS 200包含DeviceC（3.3.3.3边界路由器兼路由反射器）、DeviceD（4.4.4.4）、DeviceE（5.5.5.5）。DeviceA与DeviceC通过10.1.1.0/30链路建立eBGP。AS 100内部DeviceA（10.2.1.2/30）与DeviceB（10.2.1.1/30）建立iBGP。AS 200内部DeviceC作为路由反射器，通过10.3.1.0/30连接DeviceD（10.3.1.1/30），通过10.4.1.0/30连接DeviceE（10.4.1.1/30）。所有设备配置LoopBack地址并通过import-route direct引入直连路由。",
-  "requirement": "配置基于前缀的BGP ORF（Outbound Route Filtering）功能。DeviceA与DeviceC建立eBGP邻居，启用ORF能力通告（capability-advertise orf ip-prefix both）。DeviceA配置入口过滤策略（ip-prefix 1 import），只接收10.3.1.0/24网段的路由。通过ORF机制，DeviceA将过滤需求发送给DeviceC，DeviceC根据接收到的ORF只向DeviceA发送匹配的路由，避免不必要的路由传输，节省带宽和处理资源。",
+  "requirement": "配置基于前缀的BGP ORF（Outbound Route Filtering）功能。DeviceA与DeviceC建立eBGP邻居，启用ORF能力通告。DeviceA配置入口过滤策略（ip-prefix 1 import），只接收10.3.1.0/24网段的路由。通过ORF机制，DeviceA将过滤需求发送给DeviceC，DeviceC根据接收到的ORF只向DeviceA发送匹配的路由，避免不必要的路由传输，节省带宽和处理资源。",
   "verification": "验证所有BGP会话为Established状态；验证DeviceA只接收到10.3.1.0/30路由（符合ORF过滤条件）；验证DeviceA未接收到AS 200的其他直连路由；验证AS内部路由传播正常。",
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA(AS 100)与DeviceC(AS 200)的eBGP邻居" },

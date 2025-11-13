@@ -1,6 +1,6 @@
 {
   "topology": "AS 100内部包含4台路由器：DeviceA（1.1.1.1）、RR路由反射器（2.2.2.2）、DeviceB（3.3.3.3）、DeviceC（4.4.4.4）。DeviceA通过10.1.1.0/24连接RR（10.1.1.2/24）。RR通过10.1.2.0/24连接DeviceB（10.1.2.2/24），通过10.1.4.0/24连接DeviceC（10.1.4.1/24）。DeviceB与DeviceC通过10.1.3.0/24互联，两者运行OSPF area 0。所有设备建立iBGP邻居，RR为DeviceB配置reflect-client。",
-  "requirement": "配置路由反射器和BGP与OSPF路由重分发。DeviceA向RR发布BGP路由（配置静态路由10.7.7.7/32引入BGP），RR作为路由反射器将路由反射给DeviceB。DeviceB将BGP路由（包括iBGP路由）重分发到OSPF（import-route bgp），DeviceC将OSPF路由重分发到BGP（import-route ospf）。这种配置可能形成路由环路，需要通过BGP环路检测功能（route loop-detect）或合理的路由策略来避免。验证路由正常传播和网络连通性。",
+  "requirement": "配置路由反射器和BGP与OSPF路由重分发。DeviceA向RR发布BGP路由（配置静态路由10.7.7.7/32引入BGP），RR作为路由反射器将路由反射给DeviceB。DeviceB将BGP路由（包括iBGP路由）重分发到OSPF，DeviceC将OSPF路由重分发到BGP。这种配置可能形成路由环路，需要通过BGP环路检测功能或合理的路由策略来避免。验证路由正常传播和网络连通性。",
   "verification": "验证所有iBGP会话为Established状态；验证DeviceB-DeviceC的OSPF邻居关系正常；验证RR作为路由反射器正常工作；验证DeviceB从RR学到DeviceA的路由；验证路由重分发功能正常；验证网络基本连通性。",
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "RR", "expect": "ESTABLISHED", "description": "DeviceA与RR的iBGP邻居" },
