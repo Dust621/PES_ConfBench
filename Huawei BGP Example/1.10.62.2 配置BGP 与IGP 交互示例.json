@@ -1,0 +1,18 @@
+{
+  "topology": "网络由三台路由器组成，分别为DeviceA、DeviceB和DeviceC，划分为两个自治系统AS65008和AS65009。\n\n**物理拓扑连接：**\n- DeviceA（AS65008边缘路由器）通过interface1（GE2/0/0，IP：172.16.1.2/24）与DeviceB的interface2（GE2/0/0，IP：172.16.1.1/24）直连，形成AS间互联链路\n- DeviceB（AS65009边缘路由器）通过interface1（GE1/0/0，IP：10.1.1.1/24）与DeviceC的interface1（GE1/0/0，IP：10.1.1.2/24）连接\n- DeviceA的interface1（GE1/0/0，IP：192.168.1.1/24）连接至AS65008内部网络\n- DeviceC的interface2（GE2/0/0，IP：10.1.2.1/24）连接至AS65009内部网络段\n\n**协议配置：**\n- AS65008：DeviceA配置BGP 65008，Router-ID为1.1.1.1，通告网络192.168.1.0/24，与AS65009建立eBGP邻接关系\n- AS65009：运行OSPF区域0.0.0.0作为IGP，覆盖网络10.1.1.0/24和10.1.2.0/24；DeviceB同时运行BGP 65009，Router-ID为2.2.2.2，配置BGP与OSPF双向路由重发布，实现AS间路由传递和域内路由分发\n\n**路由重发布机制：**\nDeviceB作为AS65009的边缘路由器，配置import-route ospf将OSPF路由引入BGP，配置import-route bgp将BGP路由引入OSPF，并启用summary automatic进行路由汇总，实现两个AS之间的路由互通。",
+  "requirement": "配置BGP与IGP交互后，IGP路由可以被引入到BGP路由表进行高效广泛的传播，BGP路由也可以被引入到IGP路由表，实现对其他AS的访问。",
+  "steps": [
+    "在DeviceB和DeviceC上配置OSPF协议。",
+    "在DeviceA和DeviceB上配置EBGP连接。",
+    "在DeviceB上配置BGP与OSPF互相引入，查看路由信息。",
+    "在DeviceB上配置BGP路由聚合，简化BGP路由表。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 192.168.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 172.16.1.2 255.255.255.0\n#\nbgp 65008\n router-id 1.1.1.1\n peer 172.16.1.1 as-number 65009\n ipv4-family unicast\n  undo synchronization\n  network 192.168.1.0 255.255.255.0\n  peer 172.16.1.1 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 172.16.1.1 255.255.255.0\n#\nbgp 65009\n router-id 2.2.2.2\n peer 172.16.1.2 as-number 65008\n ipv4-family unicast\n  undo synchronization\n  summary automatic\n  import-route ospf\n  peer 172.16.1.2 enable\n#\nospf 1\n import-route bgp\n area 0.0.0.0\n  network 10.1.1.0 0.0.0.255\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n#\nospf 1\n area 0.0.0.0\n  network 10.1.1.0 0.0.0.255\n  network 10.1.2.0 0.0.0.255\n#\nreturn"
+  },
+  "related_images": [
+    "图1-144 配置BGP与IGP交互配置组网图.png"
+  ]
+}

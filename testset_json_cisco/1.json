@@ -1,0 +1,14 @@
+{
+  "topology": "两台路由器 R1 和 R2 位于不同自治系统 AS100 和 AS200，R1（AS100）通过接口 10.1.1.1/30 连接 R2（AS200）10.1.1.2/30，各自还有内部网络 R1-192.168.10.0/24、R2-192.168.20.0/24。",
+  "requirement": "在不同 AS 之间建立 eBGP 邻居关系，R1 和 R2 必须互相通告自己的内部网络前缀，并且要保证两边内部网络互通。",
+  "verification": "在两端执行 show ip bgp summary，邻居状态应为 Established；从 R1 ping 192.168.20.1 可达，从 R2 ping 192.168.10.1 可达。",
+  "verification_tasks": [
+      { "type": "bgp_session_between", "a_node": "R1", "b_node": "R2", "expect": "ESTABLISHED", "description": "R1(AS100) 与 R2(AS200) 的 eBGP 建立" },
+      { "type": "bgp_rib_contains", "node": "R1", "prefix": "192.168.20.0/24", "description": "R1 的 BGP RIB 应学到 R2 的 LAN 前缀" },
+      { "type": "bgp_rib_contains", "node": "R2", "prefix": "192.168.10.0/24", "description": "R2 的 BGP RIB 应学到 R1 的 LAN 前缀" },
+      { "type": "reachability", "src_node": "R1", "dst_ip": "192.168.20.1", "description": "R1 可达 R2 的主机" },
+      { "type": "reachability", "src_node": "R2", "dst_ip": "192.168.10.1", "description": "R2 可达 R1 的主机" },
+      { "type": "no_static_route", "node": "R1", "prefix": "192.168.20.0/24", "description": "R1 不应依赖静态路由覆盖对端网段" },
+      { "type": "no_static_route", "node": "R2", "prefix": "192.168.10.0/24", "description": "R2 不应依赖静态路由覆盖对端网段" }
+    ]
+}

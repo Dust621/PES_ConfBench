@@ -1,0 +1,17 @@
+{
+  "topology": "基于提供的网络拓扑图和配置文件，以下是增强和完善的网络拓扑描述：\n\n**网络拓扑结构：**\n该网络由三个自治系统组成：AS 100、AS 200和AS 300。AS 100包含两台设备DeviceA（router-id 1.1.1.1）和DeviceB（router-id 2.2.2.2），AS 200包含一台设备DeviceC（router-id 3.3.3.3），AS 300包含一台控制器NCE-IP。\n\n**设备连接关系：**\n- DeviceA通过interface1（10.2.1.1/24）连接至DeviceC的interface2（10.2.1.2/24）\n- DeviceB通过interface2（10.3.1.1/24）连接至DeviceC的interface1（10.3.1.2/24）\n- DeviceA通过interface2（1.1.1.1/24）连接至控制器NCE-IP的interface1（1.1.1.1/24）\n- DeviceB通过interface2（2.1.1.1/24）连接至控制器NCE-IP的interface1（2.1.1.1/24）\n- DeviceC配置LoopBack1接口（10.1.1.1/24）\n\n**BGP配置：**\n所有设备都运行BGP协议。DeviceA和DeviceB在AS 100内，通告192.168.1.0/24网段。DeviceC作为AS 200的边界路由器，与AS 100建立eBGP邻接关系。控制器NCE-IP在AS 300内，与AS 100的两台设备建立eBGP连接。\n\n**RPD流量调优配置：**\nDeviceA和DeviceB都启用了RPD（Route Policy Distribution）特性，与AS 300的控制器建立RPD邻接关系。两台设备在对AS 200的BGP邻居启用了RPD策略导出功能，实现入方向流量调优，可根据控制器下发的策略动态调整路由优先级，将来自AS 200目的为192.168.1.0/24的流量在DeviceA和DeviceB之间进行负载均衡或故障切换。",
+  "requirement": "在城域入口或IGW场景下，当链路资源利用不均匀或链路故障导致局部流量路径拥塞时，为使用户充分利用网络带宽，可部署入方向流量调优方案，指定流量调优方案，影响路由优先级，将流量引导至空闲链路。此时，路由器作为转发设备，需要部署RPD特性。",
+  "steps": [
+    "在DeviceA和DeviceC、DeviceB和DeviceC之间配置EBGP连接。",
+    "在DeviceA和DeviceB上部署RPD，分别和控制器建立RPD邻居。",
+    "在DeviceA，DeviceB和DeviceC配置IPv4单播，即DeviceA和DeviceC、DeviceB和DeviceC互为IPv4单播邻居。"
+  ],
+  "configs": {
+    "DeviceA": "#\nbgp\nrouter-id 1.1.1.1\npeer 10.2.1.2 as-number 200\npeer 1.1.1.1 as-number 300\nipv4-family unicast\nnetwork 192.168.1.0 255.255.255.0\ncommit\nquit\nquit\n#\nbgp\npeer 1.1.1.1 as-number 300\nrpd-family\npeer 1.1.1.1 enable\nquit\nipv4-family unicast\npeer 10.2.1.2 rpd-policy export enable\ncommit\nquit\nquit",
+    "DeviceB": "#\nbgp\nrouter-id 2.2.2.2\npeer 10.3.1.2 as-number 200\npeer 2.1.1.1 as-number 300\nipv4-family unicast\nnetwork 192.168.1.0 255.255.255.0\ncommit\nquit\nquit\n#\nbgp\npeer 2.1.1.1 as-number 300\nrpd-family\npeer 2.1.1.1 enable\nquit\nipv4-family unicast\npeer 10.3.1.2 rpd-policy export enable\ncommit\nquit\nquit",
+    "DeviceC": "#\nbgp\nrouter-id 3.3.3.3\npeer 10.2.1.1 as-number 100\npeer 10.3.1.1 as-number 100\nipv4-family unicast\ncommit\nquit\nquit"
+  },
+  "related_images": [
+    "图1-163 配置BGP RPD 组网图.png"
+  ]
+}

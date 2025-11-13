@@ -1,0 +1,20 @@
+{
+  "topology": "基于网络拓扑图和配置文件分析，增强后的网络拓扑描述如下：\n\n**网络拓扑结构：**\n- 四台路由器设备：DeviceA、RR（路由反射器）、DeviceB、DeviceC，均属于AS 100自治系统\n- DeviceA通过Interface1（10.1.1.1/24）连接RR的GE1/0/2接口（10.1.1.2/24）\n- RR通过GE1/0/1接口（10.1.2.1/24）连接DeviceB的GE1/0/2接口（10.1.2.2/24）\n- RR通过GE1/0/3接口（10.1.4.2/24）连接DeviceC的GE1/0/1接口（10.1.4.1/24）\n- DeviceB通过GE1/0/1接口（10.1.3.1/24）连接DeviceC的GE1/0/2接口（10.1.3.2/24）\n\n**协议配置：**\n- BGP配置：DeviceA、RR、DeviceB、DeviceC之间建立IBGP邻居关系，RR作为路由反射器为DeviceB配置reflect-client\n- OSPF配置：DeviceB和DeviceC在10.1.3.0/24网段运行OSPF协议，均归属于Area 0.0.0.0\n- 路由重分布：DeviceB将BGP路由（包括IBGP路由）引入OSPF，DeviceC将OSPF路由引入BGP\n\n**特殊配置：**\n- DeviceA配置出口路由策略ex1，为发布的BGP路由添加AS-Path（700 8000）\n- DeviceA配置静态路由10.7.7.7/32指向NULL0\n- DeviceC启用BGP路由环路检测功能（route loop-detect bgp enable）防止路由环路\n- 所有BGP设备启用private-4-byte-as功能\n\n**IP地址分配：**\n- 10.1.1.0/24：DeviceA与RR之间的链路\n- 10.1.2.0/24：RR与DeviceB之间的链路  \n- 10.1.3.0/24：DeviceB与DeviceC之间的链路（OSPF区域）\n- 10.1.4.0/24：RR与DeviceC之间的链路",
+  "requirement": "在DeviceB上将BGP路由引入到OSPF路由，在DeviceC上将OSPF路由引入到BGP路由。DeviceA上配置了到RR的出口策略为了增加路由的AS-Path，当RR收到DeviceA发布的BGP路由后，再发布此路由给DeviceB，DeviceB将BGP路由引入到OSPF路由，再将OSPF路由发布给DeviceC。DeviceC上将OSPF路由引入到BGP路由，再发布给RR。RR在比较DeviceA发布的路由和DeviceC发布的路由时，因为DeviceA发布的路由AS-Path较长，所以优选了DeviceC发布的路由，形成稳定环路。为了解决这个问题，可以在DeviceC上使能BGP路由环路检测功能。",
+  "steps": [
+    "配置接口IP地址。",
+    "配置IGP域和IBGP邻居。",
+    "在DeviceB和DeviceC上配置路由互引。",
+    "在DeviceA上配置到RR的出口策略为了增加路由的AS-Path，为了模拟环路场景。",
+    "在DeviceC上配置BGP环路检测功能。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\nbgp 100\n router-id 1.1.1.1\n private-4-byte-as enable\n peer 10.1.1.2 as-number 100\n #\n ipv4-family unicast\n  undo synchronization\n  import-route static\n  peer 10.1.1.2 enable\n  peer 10.1.1.2 route-policy ex1 export\n#\nroute-policy ex1 permit node 10\n apply as-path 700 8000 additive\n#\nip route-static 10.7.7.7 255.255.255.255 NULL0\n#\nreturn",
+    "RR": "#\nsysname RR\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/2\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n#\ninterface GigabitEthernet1/0/3\n undo shutdown\n ip address 10.1.4.2 255.255.255.0\n#\nbgp 100\n router-id 2.2.2.2\n private-4-byte-as enable\n peer 10.1.1.1 as-number 100\n peer 10.1.2.2 as-number 100\n peer 10.1.4.1 as-number 100\n #\n ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.1.1 enable\n  peer 10.1.2.2 enable\n  peer 10.1.2.2 reflect-client\n  peer 10.1.4.1 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.3.1 255.255.255.0\n ospf enable 1 area 0.0.0.0\n#\ninterface GigabitEthernet1/0/2\n undo shutdown\n ip address 10.1.2.2 255.255.255.0\n#\nbgp 100\n router-id 3.3.3.3\n private-4-byte-as enable\n peer 10.1.2.1 as-number 100\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.1.2.1 enable\n#\nospf 1\n import-route bgp permit-ibgp\n opaque-capability enable\n area 0.0.0.0\n  network 10.1.3.0 0.0.0.255\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.4.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/2\n undo shutdown\n ip address 10.1.3.2 255.255.255.0\n ospf enable 1 area 0.0.0.0\n#\nbgp 100\n router-id 4.4.4.4\n private-4-byte-as enable\n peer 10.1.4.2 as-number 100\n #\n ipv4-family unicast\n  undo synchronization\n  import-route ospf\n  peer 10.1.4.2 enable\n#\nroute loop-detect bgp enable\n#\nospf 1\n opaque-capability enable\n area 0.0.0.0\n  network 10.1.3.0 0.0.0.255\n#\nreturn"
+  },
+  "related_images": [
+    "图1-169配置BGP环路检测功能.png"
+  ]
+}

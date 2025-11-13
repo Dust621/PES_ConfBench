@@ -1,0 +1,19 @@
+{
+  "topology": "基于网络拓扑图和配置文件分析，这是一个跨AS的MPLS L3VPN网络架构：\n\n**物理拓扑连接：**\n- PE1（AS 100）通过interface1（10.10.1.2/24）连接到ASBR1的interface1（10.10.1.1/24）\n- ASBR1（AS 100）通过interface2（10.21.1.2/24）连接到ASBR2的interface2（10.21.1.2/24）\n- ASBR2（AS 200）通过interface1（10.40.1.2/24）连接到PE2的interface1（10.40.1.1/24）\n- CE1（AS 65001）通过interface1（10.1.1.1/24）连接到PE1的interface2（10.1.1.2/24）\n- CE2（AS 65002）通过interface1（10.2.1.1/24）连接到PE2的interface2（10.2.1.2/24）\n\n**设备角色和AS归属：**\n- PE1：Provider Edge路由器，AS 100，Loopback1地址1.1.1.1/32，MPLS LSR-ID 1.1.1.1\n- ASBR1：Autonomous System Border Router，AS 100，Loopback1地址2.2.2.2/32\n- ASBR2：Autonomous System Border Router，AS 200，Loopback1地址3.3.3.3/32\n- PE2：Provider Edge路由器，AS 200，Loopback1地址4.4.4.4/32\n- CE1：Customer Edge路由器，AS 65001\n- CE2：Customer Edge路由器，AS 65002\n\n**VPN配置：**\n- PE1和PE2上配置相同的VPN实例vpn1，RD为100:1和200:1，RT为1:1（import/export）\n- CE1和CE2属于同一个L3VPN，通过跨AS的BGP/MPLS实现互联\n\n**协议配置：**\n- AS 100内部：PE1和ASBR1之间运行iBGP，交换带标签的单播路由（Labeled-Unicast）\n- AS 200内部：PE2和ASBR2之间运行iBGP，交换带标签的单播路由\n- ASBR1和ASBR2之间运行eBGP，交换BGP-LU路由和VPNv4路由\n- MPLS LDP在AS内部运行，建立LSP隧道\n- CE设备通过BGP与对应PE设备交换路由信息",
+  "requirement": "在ASBR1和ASBR2之间运行eBGP协议交换它们从各自AS的PE设备接收的BGP-LU路由。配置完成后，CE1和CE2能够相互ping通。",
+  "steps": [
+    "在不同AS间的PE间建立MP-EBGP对等体关系，并配置PE之间的最大跳数。",
+    "PE与本AS的ASBR之间建立IBGP LU邻居，能够交换BGP-LU路由。",
+    "ASBR与对端ASBR之间建立EBGP LU邻居，能够交换BGP-LU路由。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.2.1.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 1.1.1.2 255.255.255.0\n#\nbgp 100\n router-id 1.1.1.1\n peer 1.1.1.1 as-number 300\n peer 10.2.1.2 as-number 200\n #\n ipv4-family unicast\n  network 192.168.1.0 255.255.255.0\n  peer 10.2.1.2 enable\n  peer 10.2.1.2 rpd-policy export enable\n #\n rpd-family\n  peer 1.1.1.1 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.3.1.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 2.1.1.2 255.255.255.0\n#\nbgp 100\n router-id 2.2.2.2\n peer 2.1.1.1 as-number 300\n peer 10.3.1.2 as-number 200\n #\n ipv4-family unicast\n  network 192.168.1.0 255.255.255.0\n  peer 10.3.1.2 enable\n  peer 10.3.1.2 rpd-policy export enable\n #\n rpd-family\n  peer 2.1.1.1 enable\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.2.1.2 255.255.255.0\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.3.1.2 255.255.255.0\n#\nbgp 200\n router-id 3.3.3.3\n peer 10.2.1.1 as-number 100\n peer 10.3.1.1 as-number 100\n #\n ipv4-family unicast\n  peer 10.2.1.1 enable\n  peer 10.3.1.1 enable\n#\nreturn",
+    "CE1": "#\nsysname CE1\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\nbgp 65001\n peer 10.1.1.2 as-number 100\n #\n ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.1.2 enable\n#\nreturn",
+    "PE1": "#\nsysname PE1\n#\nip vpn-instance vpn1\n ipv4-family\n  route-distinguisher 100:1\n  apply-label per-instance\n  vpn-target 1:1 export-extcommunity\n  vpn-target 1:1 import-extcommunity\n#\nmpls lsr-id 1.1.1.1\n#\nmpls\n#\nmpls ldp\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.10.1.2 255.255.255.0\n mpls\n mpls ldp\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip binding vpn-instance vpn1\n ip address 10.1.1.2 255.255.255.0\n#\ninterface LoopBack1\n ip address 1.1.1.1 255.255.255.255\n#\nbgp 100\n router-id 1.1.1.1\n peer 2.2.2.2 as-number 100\n peer 2.2.2.2 connect-interface LoopBack1\n peer 4.4.4.4 as-number 200\n peer 4.4.4.4 ebgp-max-hop 255\n peer 4.4.4.4 connect-interface LoopBack1\n #\n ipv4-family unicast\n  undo synchronization\n  import-rib public labeled-unicast\n  peer 2.2.2.2 enable\n  peer 4.4.4.4 enable\n #\n ipv4-family labeled-unic"
+  },
+  "related_images": [
+    "图1-164BGP-LU组网图.png"
+  ]
+}

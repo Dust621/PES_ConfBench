@@ -1,0 +1,16 @@
+{
+  "topology": "网络拓扑由两台路由器组成：DeviceA（路由器ID：1.1.1.1）属于AS100自治系统，DeviceB（路由器ID：2.2.2.2）属于AS200自治系统。两台设备通过直连链路建立物理连接，DeviceA的Interface1接口配置IP地址10.20.1.1/24，DeviceB的Interface1接口配置IP地址10.20.1.2/24，形成10.20.1.0/24网段。\n\n网络运行BGP协议，DeviceA和DeviceB之间建立EBGP邻居关系。为增强安全性，两台设备均配置BGP Keychain认证功能，使用名为\"AMode\"的密钥链，采用HMAC-SHA-256加密算法，密钥字符串为\"hello\"。密钥链配置为绝对时间模式，发送和接收时间窗口均设置为2009年12月24日11:00至12:00。\n\nBGP配置中，DeviceA将10.20.1.2（DeviceB）配置为AS200的EBGP对等体，DeviceB将10.20.1.1（DeviceA）配置为AS100的EBGP对等体，并在两端BGP配置中关联相应的Keychain认证，确保EBGP连接的安全性和可靠性。",
+  "requirement": "DeviceA 和 DeviceB 之间建立 EBGP 连接，并使用 BGP Keychain 功能保障 EBGP 连接免受攻击。BGP 对等体两端必须都配置 Keychain 认证，且配置的 Keychain 必须使用相同的加密算法和密码，才能正常建立 TCP 连接，交互 BGP 消息。",
+  "steps": [
+    "在 DeviceA 和 DeviceB 之间建立 EBGP 连接。",
+    "在 DeviceA 和 DeviceB 上分别配置 Keychain 认证功能。",
+    "在 DeviceA 和 DeviceB 之间的 EBGP 连接上应用 Keychain 认证。"
+  ],
+  "configs": {
+    "DeviceA": "#\nbgp\nrouter-id 1.1.1.1\npeer 10.20.1.2 as-number 200\ncommit\nquit\n#\nkeychain AMode mode absolute\ntcp-kind\ntcp-algorithm-id hmac-sha-256\nreceive-tolerance\nkey-id 1\nalgorithm hmac-sha-256\nkey-string hello\nsend-time 11:00 2009-12-24 to 12:00 2009-12-24\nreceive-time 11:00 2009-12-24 to 12:00 2009-12-24\ncommit\nquit\nquit\n#\nbgp\npeer 10.20.1.2 keychain AMode\ncommit\nquit",
+    "DeviceB": "#\nbgp\nrouter-id 2.2.2.2\npeer 10.20.1.1 as-number 100\ncommit\nquit\n#\nkeychain AMode mode absolute\ntcp-kind\ntcp-algorithm-id hmac-sha-256\nreceive-tolerance\nkey-id 1\nalgorithm hmac-sha-256\nkey-string hello\nsend-time 11:00 2009-12-24 to 12:00 2009-12-24\nreceive-time 11:00 2009-12-24 to 12:00 2009-12-24\ncommit\nquit\nquit\n#\nbgp\npeer 10.20.1.1 keychain AMode\ncommit\nquit"
+  },
+  "related_images": [
+    "图1-161 配置 BGP KeyChain 组网图.png"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "topology": "该网络拓扑由3台路由器组成，分布在2个自治系统中：\n\n**物理拓扑结构：**\n- DeviceA（AS65008）通过interface1连接DeviceB的interface2\n- DeviceA（AS65008）通过interface2连接DeviceC的interface2\n- DeviceB（AS65009）通过interface1连接DeviceC的interface1\n\n**IP地址分配：**\n- DeviceA-DeviceB链路：10.1.1.0/24网段（DeviceA: 10.1.1.2/24, DeviceB: 10.1.1.1/24）\n- DeviceA-DeviceC链路：10.1.2.0/24网段（DeviceA: 10.1.2.2/24, DeviceC: 10.1.2.1/24）\n- DeviceB-DeviceC链路：172.16.1.0/24网段（DeviceB: 172.16.1.1/24, DeviceC: 172.16.1.2/24）\n- 各设备Router ID分别为：DeviceA（1.1.1.1）、DeviceB（2.2.2.2）、DeviceC（3.3.3.3）\n\n**BGP连接关系：**\n- EBGP连接：DeviceA（AS65008）分别与DeviceB（AS65009）和DeviceC（AS65009）建立连接\n- IBGP连接：AS65009内部DeviceB与DeviceC之间通过物理接口建立连接",
+  "requirement": "通过配置BGP的MED属性来控制流量进入AS65009的路径选择。当DeviceA需要访问目的地址172.16.1.0/24时，可以从DeviceB或DeviceC进入AS65009。通过在DeviceB上增大发送给DeviceA的MED值至100，使DeviceA优先选择DeviceC作为流量进入AS65009的入口设备。",
+  "steps": [
+    "在DeviceA和DeviceB、DeviceA和DeviceC之间配置EBGP连接；在DeviceB和DeviceC之间配置IBGP连接。",
+    "通过使用路由策略增大DeviceB发送给DeviceA的MED值，这样可以使DeviceA选择DeviceC作为流量发往AS65009的入口设备。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.2 255.255.255.0\n#\nbgp 65008\n router-id 1.1.1.1\n peer 10.1.1.1 as-number 65009\n peer 10.1.2.1 as-number 65009\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.1.1.1 enable\n  peer 10.1.2.1 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 172.16.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\nbgp 65009\n router-id 2.2.2.2\n peer 172.16.1.2 as-number 65009\n peer 10.1.1.2 as-number 65008\n #\n ipv4-family unicast\n  undo synchronization\n  network 172.16.1.0 255.255.255.0\n  peer 172.16.1.2 enable\n  peer 10.1.1.2 enable\n  peer 10.1.1.2 route-policy 10 export\n#\nroute-policy 10 permit node 10\n apply cost 100\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 172.16.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n#\nbgp 65009\n router-id 3.3.3.3\n peer 172.16.1.1 as-number 65009\n peer 10.1.2.2 as-number 65008\n #\n ipv4-family unicast\n  undo synchronization\n  network 172.16.1.0 255.255.255.0\n  peer 172.16.1.1 enable\n  peer 10.1.2.2 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-145 配置BGP 的MED 属性控制路由选择组网图.png"
+  ]
+}

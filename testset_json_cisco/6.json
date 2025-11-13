@@ -1,0 +1,13 @@
+{
+  "topology": "三台路由器 R1、R2、R3 在 AS900。R1 与 R2 链接 10.1.1.0/30，R2 与 R3 链接 10.1.2.0/30。R1 附属网络 172.31.1.0/24，R3 附属网络 172.31.3.0/24。",
+  "requirement": "在 AS900 内采用 OSPF area 0 + NSSA（Not So Stubby Area）area 10。R3 所在接口划入 area 10，其他为 area 0。要求 R1 能访问 R3 的网络，且 R3 网络对外隐藏外部路由。",
+  "verification": "R3 上 show ip ospf database 应显示 NSSA 类型；R1 ping 172.31.3.1 成功。",
+  "verification_tasks": [
+    { "type": "ospf_area_contains", "area": "0", "nodes": ["R1","R2"], "description": "R1、R2 在 backbone area 0" },
+    { "type": "ospf_area_contains", "area": "10", "nodes": ["R3"], "description": "R3 在 NSSA area 10" },
+    { "type": "ospf_nssa_present", "area": "10", "description": "OSPF area 10 类型为 NSSA（LSA Type-7 存在）" },
+    { "type": "route_exists", "node": "R1", "network": "172.31.3.0/24", "description": "R1 路由表有 R3 的 LAN（由 ABR 转换/引入）" },
+    { "type": "reachability", "src_node": "R1", "dst_ip": "172.31.3.1", "description": "R1 可达 R3 主机" },
+    { "type": "no_ospf_external_on_border", "area": "10", "description": "验证 NSSA 对外部路由的隐藏/转换策略（无 Type-5 直接泄露）" }
+  ]
+}

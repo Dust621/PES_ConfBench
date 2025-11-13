@@ -1,0 +1,58 @@
+{
+  "topology": "六台路由器组成两个 AS：AS1300（R1-R3）和 AS1400（R4-R6）。AS1300 内 R1–R2–R3 串联，AS1400 内 R4–R5–R6 串联。R3 与 R4 通过 198.51.100.0/30 链接。R1 附属 10.1.10.0/24，R6 附属 10.1.60.0/24。",
+  "requirement": "AS1300 内使用 OSPF area 0；AS1400 内也使用 OSPF area 0。R3 与 R4 建立 eBGP 邻居关系，要求所有附属网络在两边可达，并在 eBGP 上通告其内部网络。",
+  "verification": "在 R3 和 R4 上 show ip bgp summary 显示 Established；从 R1 ping 10.1.60.1 成功；从 R6 ping 10.1.10.1 成功。",
+  "verification_tasks": [
+    {
+      "type": "ospf_area_contains",
+      "area": "0",
+      "nodes": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "description": "AS1300 在 area 0"
+    },
+    {
+      "type": "ospf_area_contains",
+      "area": "0",
+      "nodes": [
+        "R4",
+        "R5",
+        "R6"
+      ],
+      "description": "AS1400 在 area 0"
+    },
+    {
+      "type": "bgp_session_between",
+      "a_node": "R3",
+      "b_node": "R4",
+      "expect": "ESTABLISHED",
+      "description": "R3↔R4 eBGP 建立"
+    },
+    {
+      "type": "route_exists",
+      "node": "R1",
+      "prefix": "10.1.60.0/24",
+      "description": "AS1300 端可见 AS1400 的 R6 LAN"
+    },
+    {
+      "type": "route_exists",
+      "node": "R6",
+      "prefix": "10.1.10.0/24",
+      "description": "AS1400 端可见 AS1300 的 R1 LAN"
+    },
+    {
+      "type": "reachability",
+      "src_node": "R1",
+      "dst_ip": "10.1.60.1",
+      "description": "R1 可达 R6 主机"
+    },
+    {
+      "type": "reachability",
+      "src_node": "R6",
+      "dst_ip": "10.1.10.1",
+      "description": "R6 可达 R1 主机"
+    }
+  ]
+}

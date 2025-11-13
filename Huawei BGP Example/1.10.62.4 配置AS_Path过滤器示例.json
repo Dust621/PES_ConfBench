@@ -1,0 +1,16 @@
+{
+  "topology": "**网络拓扑结构：**\n- DeviceA（AS 65010）作为核心路由器，配置Router-ID 1.1.1.1\n- DeviceB（AS 65020）作为中转路由器，配置Router-ID 2.2.2.2\n- DeviceC（AS 65030）作为边缘路由器，配置Router-ID 3.3.3.3\n\n**物理连接和接口配置：**\n- DeviceA通过GigabitEthernet2/0/0接口（IP：10.1.2.1/24）连接DeviceB的GigabitEthernet2/0/0接口（IP：10.1.2.2/24）\n- DeviceB通过GigabitEthernet1/0/0接口（IP：10.1.3.1/24）连接DeviceC的GigabitEthernet2/0/0接口（IP：10.1.3.2/24）\n- DeviceA的GigabitEthernet1/0/0接口配置IP 10.1.4.1/24用于本地网络\n- DeviceC的GigabitEthernet1/0/0接口配置IP 10.1.4.2/24用于本地网络\n\n**BGP协议配置：**\n- DeviceA与DeviceB之间建立EBGP邻居关系（AS 65010 ↔ AS 65020）\n- DeviceB与DeviceC之间建立EBGP邻居关系（AS 65020 ↔ AS 65030）\n- 所有设备启用直连路由重分布到BGP\n\n**安全隔离配置：**\n- DeviceB配置AS_Path过滤器实现AS间路由隔离：\n  - as-path-filter 1应用于peer 10.1.2.1（DeviceA），拒绝包含AS 30的路由\n  - as-path-filter 2应用于peer 10.1.3.2（DeviceC），拒绝包含AS 10的路由\n- 实现AS 65010和AS 65030之间的双向路由隔离，确保企业A和企业C的网络安全性",
+  "requirement": "企业A和企业C为了提高安全性，希望各自传播给企业B的路由不被对方学到。在企业B上配置AS_Path过滤器功能，使得AS20不向AS10发布AS30的路由，也不向AS30发布AS10的路由，实现AS10和AS30之间相互隔离。",
+  "steps": [
+    "在DeviceA和DeviceB之间、DeviceB和DeviceC之间分别配置EBGP连接，并引入直连路由。",
+    "在DeviceB上配置AS_Path过滤器，并应用该过滤规则。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.4.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n#\nbgp 65010\n router-id 1.1.1.1\n peer 10.1.2.2 as-number 65020\n #\n ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.2.2 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.3.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.2 255.255.255.0\n#\nbgp 65020\n router-id 2.2.2.2\n peer 10.1.2.1 as-number 65010\n peer 10.1.3.2 as-number 65030\n #\n ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.2.1 enable\n  peer 10.1.2.1 as-path-filter 1 export\n  peer 10.1.3.2 enable\n  peer 10.1.3.2 as-path-filter 2 export\n#\n ip as-path-filter 1 deny _30_\n#\n ip as-path-filter 1 permit .*\n#\n ip as-path-filter 2 deny _10_\n#\n ip as-path-filter 2 permit .*\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.4.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.3.2 255.255.255.0\n#\nbgp 65030\n router-id 3.3.3.3\n peer 10.1.3.1 as-number 65020\n #\n ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.3.1 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-146 配置BGP 路由过滤组网图.png"
+  ]
+}

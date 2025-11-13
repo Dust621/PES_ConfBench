@@ -1,0 +1,16 @@
+{
+  "topology": "基于网络拓扑图和配置文件的分析，完善后的网络拓扑描述如下：\n\n该网络拓扑由三台路由器设备组成，分别为DeviceA、DeviceB和DeviceC。DeviceA通过GigabitEthernet1/0/0接口（IP地址10.1.1.1/24）与DeviceB的GigabitEthernet1/0/0接口（IP地址10.1.1.2/24）直连，两设备间运行BGP 100基本实例，建立公网IBGP邻居关系，用于承载公网IPv4单播路由。\n\nDeviceB作为网络的核心节点，同时配置了VPN实例vpn1（RD为100:1），其GigabitEthernet2/0/0接口（IP地址10.1.2.2/24）绑定到vpn1实例，与DeviceC的GigabitEthernet2/0/0接口（IP地址10.1.2.3/24）直连。DeviceC同样配置了相同的VPN实例vpn1。\n\n在私网连接方面，DeviceB运行BGP 200多实例（instance vpn1），DeviceC运行BGP 200基本实例，两设备间建立私网IBGP邻居关系，专用于承载VPN实例内的私网路由。这种设计实现了公网路由和私网路由的完全分离，通过不同的BGP实例和VPN技术确保路由的独立管理和维护。\n\n整个网络架构支持公私网流量的有效隔离，DeviceA负责公网路由的注入，DeviceC负责私网路由的汇聚，DeviceB作为中转设备同时处理两种类型的路由信息。",
+  "requirement": "在DeviceA和DeviceB之间的BGP基本实例下部署公网BGP-IPv4单播地址族视图，建立公网IBGP邻居，用于承载公网路由。在DeviceB的BGP多实例和DeviceC的基本实例下部署私网地址族，建立私网IBGP邻居，用于承载私网路由。这样可以实现路由的分开管理和维护。",
+  "steps": [
+    "在DeviceA和DeviceB之间BGP基本实例下部署公网BGP-IPv4单播地址族视图，建立公网IBGP邻居。",
+    "在DeviceB的BGP多实例和DeviceC的基本实例下部署私网地址族，建立私网IBGP邻居。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\nbgp 100\n peer 10.1.1.2 as-number 100\n ipv4-family unicast\n  undo synchronization\n  import-route static\n  peer 10.1.1.2 enable\n#\nip route-static 192.168.1.1 255.255.255.255 NULL0\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\nip vpn-instance vpn1\n ipv4-family\n  route-distinguisher 100:1\n  apply-label per-instance\n  vpn-target 100:1 export-extcommunity\n  vpn-target 100:1 import-extcommunity\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip binding vpn-instance vpn1\n ip address 10.1.2.2 255.255.255.0\n#\nbgp 100\n peer 10.1.1.1 as-number 100\n ipv4-family unicast\n  undo synchronization\n  peer 10.1.1.1 enable\n#\nbgp 200 instance vpn1\n ipv4-family vpn-instance vpn1\n  peer 10.1.2.3 as-number 200\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\nip vpn-instance vpn1\n ipv4-family\n  route-distinguisher 100:1\n  apply-label per-instance\n  vpn-target 100:1 export-extcommunity\n  vpn-target 100:1 import-extcommunity\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip binding vpn-instance vpn1\n ip address 10.1.2.3 255.255.255.0\n#\nbgp 200\n ipv4-family unicast\n  undo synchronization\n ipv4-family vpn-instance vpn1\n  import-route static\n  peer 10.1.2.2 as-number 200\n#\nip route-static vpn-instance vpn1 192.168.3.3 255.255.255.255 NULL0\n#\nreturn"
+  },
+  "related_images": [
+    "图1-166 BGP 多实例组网.png"
+  ]
+}

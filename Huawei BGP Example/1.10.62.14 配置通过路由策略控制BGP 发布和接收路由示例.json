@@ -1,0 +1,20 @@
+{
+  "topology": "基于网络拓扑图和配置文件分析，完整的网络拓扑描述如下：\n\n**网络架构：**\n- AS 100：DeviceA（路由器，BGP路由器ID 1.1.1.1）\n- AS 200：DeviceB、DeviceC、DeviceD（路由器，分别配置BGP路由器ID 2.2.2.2、3.3.3.3、4.4.4.4）\n\n**物理连接：**\n- DeviceA interface1 (192.168.1.1/24) ↔ DeviceB interface1 (192.168.1.2/24)\n- DeviceB interface2 (192.168.3.1/24) ↔ DeviceD interface1 (192.168.3.2/24)  \n- DeviceB interface3 (192.168.2.1/24) ↔ DeviceC interface1 (192.168.2.2/24)\n\n**协议配置：**\n- AS间协议：BGP，DeviceA与DeviceB建立eBGP邻居关系\n- AS内协议：AS 200内运行OSPF区域0，所有设备参与OSPF路由交换；DeviceB、DeviceC、DeviceD间建立iBGP邻居关系\n\n**路由策略：**\n- DeviceA通过ip-prefix策略\"a2b\"仅向DeviceB通告172.16.17.0/24、172.16.18.0/24、172.16.19.0/24路由\n- DeviceC通过入方向ip-prefix策略\"in\"仅接收172.16.18.0/24路由\n- DeviceD无路由过滤，接收DeviceB提供的全部路由\n- DeviceA配置静态路由172.16.16.0/24至172.16.20.0/24指向NULL0接口，模拟Internet路由\n\n**网络分段：**\n- 管理网段：192.168.1.0/24（DeviceA-DeviceB互联）\n- 内部网段1：192.168.2.0/24（DeviceB-DeviceC互联）\n- 内部网段2：192.168.3.0/24（DeviceB-DeviceD互联）\n- 外部路由：172.16.16.0/24至172.16.20.0/24网段",
+  "requirement": "DeviceA 仅向 DeviceB 提供 `172.16.17.0/24`、`172.16.18.0/24` 和 `172.16.19.0/24` 路由。DeviceC 仅接收 `172.16.18.0/24` 路由。DeviceD 接收 DeviceB 提供的全部路由。",
+  "steps": [
+    "配置 OSPF 基本功能：在 DeviceB、DeviceC 和 DeviceD 上配置 OSPF 基本功能，确保 AS 200 内部路由可达。",
+    "配置 BGP 邻居关系：在 DeviceA 和 DeviceB 上配置 EBGP 邻居。在 DeviceB 和 DeviceC、DeviceB 和 DeviceD 上配置 IBGP 邻居。",
+    "配置静态路由并引入 BGP：在 DeviceA 上配置静态路由，并将这些路由引入 BGP 路由。",
+    "配置 BGP 路由发布策略：在 DeviceA 上配置 BGP 路由发布策略，确保 DeviceB 仅接收到指定的路由。",
+    "配置 BGP 路由接收策略：在 DeviceC 上配置 BGP 路由接收策略，确保 DeviceC 仅接收到指定的路由。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 192.168.1.1 255.255.255.0\n#\nbgp 100\n router-id 1.1.1.1\n peer 192.168.1.2 as-number 200\n#\n ipv4-family unicast\n  undo synchronization\n  filter-policy ip-prefix a2b export static\n  import-route static\n  peer 192.168.1.2 enable\n#\nip ip-prefix a2b index 10 permit 172.16.17.0 24\nip ip-prefix a2b index 20 permit 172.16.18.0 24\nip ip-prefix a2b index 30 permit 172.16.19.0 24\n#\nip route-static 172.16.16.0 255.255.255.0 NULL0\nip route-static 172.16.17.0 255.255.255.0 NULL0\nip route-static 172.16.18.0 255.255.255.0 NULL0\nip route-static 172.16.19.0 255.255.255.0 NULL0\nip route-static 172.16.20.0 255.255.255.0 NULL0\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 192.168.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 192.168.3.1 255.255.255.0\n#\ninterface GigabitEthernet3/0/0\n undo shutdown\n ip address 192.168.2.1 255.255.255.0\n#\nbgp 200\n router-id 2.2.2.2\n peer 192.168.1.1 as-number 100\n peer 192.168.2.2 as-number 200\n peer 192.168.3.2 as-number 200\n#\n ipv4-family unicast\n  undo synchronization\n  peer 192.168.1.1 enable\n  peer 192.168.2.2 enable\n  peer 192.168.3.2 enable\n#\nospf 1\n area 0.0.0.0\n  network 192.168.1.0 0.0.0.255\n  network 192.168.2.0 0.0.0.255\n  network 192.168.3.0 0.0.0.255\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 192.168.2.2 255.255.255.0\n#\nbgp 200\n router-id 3.3.3.3\n peer 192.168.2.1 as-number 200\n#\n ipv4-family unicast\n  undo synchronization\n  filter-policy ip-prefix in import\n  peer 192.168.2.1 enable\n#\nospf 1\n area 0.0.0.0\n  network 192.168.2.0 0.0.0.255\n#\nip ip-prefix in index 10 permit 172.16.18.0 24\n#\nreturn",
+    "DeviceD": "#\nsysname DeviceD\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 192.168.3.2 255.255.255.0\n#\nbgp 200\n router-id 4.4.4.4\n peer 192.168.3.1 as-number 200\n#\n ipv4-family unicast\n  undo synchronization\n  peer 192.168.3.1 enable\n#\nospf 1\n area 0.0.0.0\n  network 192.168.3.0 0.0.0.255\n#\nreturn"
+  },
+  "related_images": [
+    "图1-156 配置对接收和发布的路由过滤组网图.png"
+  ]
+}

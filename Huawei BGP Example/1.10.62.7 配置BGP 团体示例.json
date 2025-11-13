@@ -1,0 +1,16 @@
+{
+  "topology": "网络拓扑由三台路由器设备组成，分别部署在不同的自治系统中。DeviceA（路由器ID：1.1.1.1）位于AS 10，配置有两个接口：interface1（10.5.1.1/24）和interface2（10.1.2.1/24）。DeviceB（路由器ID：2.2.2.2）位于AS 20，作为中转AS，配置有interface2（10.1.2.2/24）和interface3（10.1.3.1/24）。DeviceC（路由器ID：3.3.3.3）位于AS 30，配置有interface3（10.1.3.2/24）。\n\n设备间通过EBGP建立邻居关系：DeviceA与DeviceB之间通过10.1.2.0/24网段建立EBGP连接，DeviceB与DeviceC之间通过10.1.3.0/24网段建立EBGP连接。",
+  "requirement": "企业A为了提高安全性希望自己所在AS发送给企业B的路由只在企业B内传播，而不传播给企业C。通过在DeviceA上配置团体属性功能，实现AS10发布到AS20中的BGP路由不再被AS20向其他AS发布。",
+  "steps": [
+    "DeviceA和DeviceB之间，DeviceB和DeviceC之间分别配置EBGP连接。",
+    "在DeviceA上配置路由策略，发布No_Export团体属性。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.5.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n#\nbgp 10\n router-id 1.1.1.1\n peer 10.1.2.2 as-number 20\n #\n ipv4-family unicast\n  undo synchronization\n  network 10.5.1.0 255.255.255.0\n  peer 10.1.2.2 enable\n  peer 10.1.2.2 route-policy comm_policy export\n  peer 10.1.2.2 advertise-community\n#\nroute-policy comm_policy permit node 10\n apply community no-export\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.1.2.2 255.255.255.0\n#\ninterface GigabitEthernet3/0/0\n undo shutdown\n ip address 10.1.3.1 255.255.255.0\n#\nbgp 20\n router-id 2.2.2.2\n peer 10.1.2.1 as-number 10\n peer 10.1.3.2 as-number 30\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.1.2.1 enable\n  peer 10.1.3.2 enable\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet3/0/0\n undo shutdown\n ip address 10.1.3.2 255.255.255.0\n#\nbgp 30\n router-id 3.3.3.3\n peer 10.1.3.1 as-number 20\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.1.3.1 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-149配置BGP团体组网图.png"
+  ]
+}

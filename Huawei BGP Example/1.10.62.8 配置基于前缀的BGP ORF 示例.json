@@ -1,0 +1,18 @@
+{
+  "topology": "该网络由五台路由器组成，分布在两个自治系统中：\n\n**物理拓扑结构：**\n- DeviceA和DeviceB位于AS100，其中DeviceA作为边界路由器与AS200互联\n- DeviceC、DeviceD和DeviceE位于AS200，DeviceC作为边界路由器与AS100互联\n- AS100内部：DeviceA与DeviceB通过接口GE2/0/0（10.2.1.2/30）和GE1/0/0（10.2.1.1/30）建立iBGP连接\n- AS间连接：DeviceA通过接口GE1/0/0（10.1.1.1/30）与DeviceC的GE1/0/0（10.1.1.2/30）建立eBGP邻居关系\n- AS200内部：DeviceC作为路由反射器，与DeviceD通过接口GE2/0/0（10.3.1.2/30）和GE1/0/0（10.3.1.1/30）建立iBGP连接，与DeviceE通过接口GE3/0/0（10.4.1.2/30）和GE1/0/1（10.4.1.1/30）建立iBGP连接\n\n**IP地址分配：**\n- 环回地址：DeviceA(1.1.1.1/32)、DeviceB(2.2.2.2/32)、DeviceC(3.3.3.3/32)、DeviceD(4.4.4.4/32)、DeviceE(5.5.5.5/32)\n- 互联网段：AS100内部使用10.2.1.0/30，AS间使用10.1.1.0/30，AS200内部使用10.3.1.0/30和10.4.1.0/30\n\n**BGP ORF配置：**\n- DeviceA配置基于前缀的ORF能力通告和入口策略（ip-prefix 1），只接收10.3.1.0/24网段的路由\n- DeviceC启用ORF能力通告，接收DeviceA发送的过滤列表，实现按需路由发送\n- 该配置使DeviceA能够控制从DeviceC接收的路由，而DeviceC无需维护单独的出口策略",
+  "requirement": "配置基于前缀的BGP ORF，使DeviceA能够控制DeviceC发送的路由，而无需DeviceC单独维护出口策略。",
+  "steps": [
+    "建立BGP邻居：在DeviceA和DeviceC之间建立EBGP邻居，在DeviceA和DeviceB之间建立IBGP邻居，在DeviceC和DeviceD、DeviceC和DeviceE之间建立IBGP邻居。",
+    "配置入口过滤和ORF能力：在DeviceA上应用基于前缀的入口过滤，在DeviceA和DeviceC上分别使能基于前缀的BGP ORF能力。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet2/0/0\n ip address 10.2.1.2 255.255.255.252\n#\ninterface GigabitEthernet1/0/0\n ip address 10.1.1.1 255.255.255.252\n#\ninterface LoopBack1\n ip address 1.1.1.1 255.255.255.255\n#\nbgp 100\n router-id 1.1.1.1\n peer 10.1.1.2 as-number 200\n peer 10.2.1.1 as-number 100\n # ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.1.2 enable\n  peer 10.1.1.2 ip-prefix 1 import\n  peer 10.1.1.2 capability-advertise orf ip-prefix both\n  peer 10.2.1.1 enable\n#\nip ip-prefix 1 index 10 permit 10.3.1.0 24 greater-equal 24 less-equal 32\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n ip address 10.2.1.1 255.255.255.252\n#\ninterface LoopBack1\n ip address 2.2.2.2 255.255.255.255\n#\nbgp 100\n router-id 2.2.2.2\n peer 10.2.1.2 as-number 100\n # ipv4-family unicast\n  undo synchronization\n  peer 10.2.1.2 enable\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet2/0/0\n ip address 10.3.1.2 255.255.255.252\n#\ninterface GigabitEthernet1/0/0\n ip address 10.1.1.2 255.255.255.252\n#\ninterface GigabitEthernet3/0/0\n ip address 10.4.1.2 255.255.255.252\n#\ninterface LoopBack1\n ip address 3.3.3.3 255.255.255.255\n#\nbgp 200\n router-id 3.3.3.3\n peer 10.1.1.1 as-number 100\n peer 10.3.1.1 as-number 200\n peer 10.4.1.1 as-number 200\n # ipv4-family unicast\n  undo synchronization\n  import-route direct\n  peer 10.1.1.1 enable\n  peer 10.1.1.1 capability-advertise orf ip-prefix both\n  peer 10.3.1.1 enable\n  peer 10.4.1.1 enable\n#\nreturn",
+    "DeviceD": "#\nsysname DeviceD\n#\ninterface GigabitEthernet1/0/0\n ip address 10.3.1.1 255.255.255.252\n#\ninterface LoopBack1\n ip address 4.4.4.4 255.255.255.255\n#\nbgp 200\n router-id 4.4.4.4\n peer 10.3.1.2 as-number 200\n # ipv4-family unicast\n  undo synchronization\n  peer 10.3.1.2 enable\n#\nreturn",
+    "DeviceE": "#\nsysname DeviceE\n#\ninterface GigabitEthernet1/0/1\n ip address 10.4.1.1 255.255.255.252\n#\ninterface LoopBack1\n ip address 5.5.5.5 255.255.255.255\n#\nbgp 200\n router-id 5.5.5.5\n peer 10.4.1.2 as-number 200\n # ipv4-family unicast\n  undo synchronization\n  peer 10.4.1.2 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-150配置基于前缀的BGPORF功能基本组网图.png"
+  ]
+}

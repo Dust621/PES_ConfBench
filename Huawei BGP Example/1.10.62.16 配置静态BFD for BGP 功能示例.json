@@ -1,0 +1,16 @@
+{
+  "topology": "基于网络拓扑图和配置文件分析，增强后的网络拓扑描述如下：\n\n**网络拓扑架构：**\n- DeviceA（AS 100）和DeviceB（AS 200）为两台路由器设备\n- 两设备通过Eth-Trunk1链路聚合连接，实现链路冗余\n- DeviceA的GE1/0/0和GE2/0/0接口加入Eth-Trunk1\n- DeviceB的GE1/0/0和GE2/0/0接口加入Eth-Trunk1\n- Eth-Trunk1逻辑接口IP地址段：10.20.1.0/24\n  - DeviceA: 10.20.1.1/24\n  - DeviceB: 10.20.1.2/24\n\n**协议配置：**\n- EBGP邻居关系：AS 100与AS 200之间建立外部BGP会话\n- BGP Router-ID：DeviceA为1.1.1.1，DeviceB为2.2.2.2\n- BFD快速检测机制：\n  - DeviceA配置BFD会话\"AtoB\"，包含两个子会话（discriminator 100/200和300/400）\n  - DeviceB配置BFD会话\"BtoA\"，包含两个子会话（discriminator 200/100和400/300）\n  - 每个子会话分别绑定到不同的板卡（select-board 1和2）\n- BGP与BFD联动：BGP邻居关系通过BFD会话进行快速故障检测和收敛\n\n**冗余设计：**\n- 物理层：双链路Eth-Trunk聚合提供链路级冗余\n- 检测层：双BFD子会话分别监控不同物理路径\n- 协议层：BGP结合BFD实现毫秒级故障检测和路由收敛",
+  "requirement": "利用BFD检测DeviceA和DeviceB的BGP邻居关系。当DeviceA和DeviceB之间的链路发生故障时，BFD能够快速检测到故障并通告给BGP，实现网络的快速收敛。",
+  "steps": [
+    "在各设备上配置BGP基本功能。",
+    "在DeviceA和DeviceB上使能静态BFD。",
+    "在DeviceA和DeviceB上使能BGP BFD检测功能。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\nbfd\n#\ninterface Eth-Trunk1\n ip address 10.20.1.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n eth-trunk 1\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n eth-trunk 1\n#\nbfd AtoB bind peer-ip 10.20.1.2 group\n sub-session discriminator local 100 remote 200 select-board 1\n sub-session discriminator local 300 remote 400 select-board 2\n#\nbgp 100\n router-id 1.1.1.1\n private-4-byte-as enable\n peer 10.20.1.2 as-number 200\n peer 10.20.1.2 bfd track session-name AtoB\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.20.1.2 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\nbfd\n#\ninterface Eth-Trunk1\n ip address 10.20.1.2 255.255.255.0\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n eth-trunk 1\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n eth-trunk 1\n#\nbfd BtoA bind peer-ip 10.20.1.1 group\n sub-session discriminator local 200 remote 100 select-board 1\n sub-session discriminator local 400 remote 300 select-board 2\n#\nbgp 200\n router-id 2.2.2.2\n private-4-byte-as enable\n peer 10.20.1.1 as-number 100\n peer 10.20.1.1 bfd track session-name BtoA\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.20.1.1 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-158配置静态BFDforBGP组网图.png"
+  ]
+}

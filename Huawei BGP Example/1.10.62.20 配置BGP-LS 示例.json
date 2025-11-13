@@ -1,0 +1,19 @@
+{
+  "topology": "本网络拓扑由5台设备组成：Controller（控制器）、DeviceA（L1路由器）、DeviceB（L1路由器）、DeviceC（L1/2路由器）和DeviceD（L2路由器）。\n\n**物理连接关系：**\n- DeviceA通过interface2连接DeviceC的interface2（10.1.1.0/24网段）\n- DeviceB通过interface4连接DeviceC的interface4（10.1.2.0/24网段）  \n- DeviceC通过interface3连接DeviceD的interface3（192.168.0.0/24网段）\n- Controller通过interface1连接DeviceC的interface1（1.1.1.0/24网段）\n\n**IS-IS区域划分：**\n- Area10包含DeviceA（L1）、DeviceB（L1）和DeviceC（L1/2）\n- Area20包含DeviceD（L2）\n- DeviceC作为L1/2设备，充当Area10和Area20之间的区域边界路由器\n\n**IP地址分配：**\n- DeviceA: interface2 (10.1.1.2/24)\n- DeviceB: interface4 (10.1.2.2/24) \n- DeviceC: interface1 (1.1.1.1/24), interface2 (10.1.1.1/24), interface3 (192.168.0.1/24), interface4 (10.1.2.1/24)\n- DeviceD: interface3 (192.168.0.2/24), LoopBack0 (172.16.1.1/32)\n- Controller: interface1 (1.1.1.2/24)\n\n**协议配置：**\n- IS-IS协议实现设备间IP网络互连\n- DeviceC启用BGP-LS功能，通过BGP协议将IS-IS发现的拓扑信息上送至Controller\n- DeviceC和Controller之间建立BGP对等体关系（AS 100），支持IPv4单播和链路状态地址族\n- DeviceC的BGP-LS标识符设置为20，覆盖L1/2级别的拓扑收集",
+  "requirement": "BGP-LS 是收集网络拓扑的一种新方式。IGP 协议发现的拓扑信息由 BGP 协议汇总后上送给上层控制器。",
+  "steps": [
+    "配置各路由器接口的 IP 地址。",
+    "配置 IS-IS 的基本功能。",
+    "在 DeviceC 和 Controller 上部署 BGP-LS 特性。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\nisis\n is-level level-1\n network-entity 10.0000.0000.0001.00\n#\ninterface GigabitEthernet1/0/2\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n isis enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\nisis\n is-level level-1\n network-entity 10.0000.0000.0002.00\n#\ninterface GigabitEthernet1/0/4\n undo shutdown\n ip address 10.1.2.2 255.255.255.0\n isis enable\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\nisis\n bgp-ls enable level-1-2\n bgp-ls identifier 20\n network-entity 10.0000.0000.0003.00\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 1.1.1.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/2\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n isis enable\n#\ninterface GigabitEthernet1/0/3\n undo shutdown\n ip address 192.168.0.1 255.255.255.0\n isis enable\n#\ninterface GigabitEthernet1/0/4\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n isis enable\n#\nbgp\n peer 1.1.1.2 as-number 100\n # ipv4-family unicast\n  undo synchronization\n  peer 1.1.1.2 enable\n # link-state-family unicast\n  peer 1.1.1.2 enable\n#\nreturn",
+    "DeviceD": "#\nsysname DeviceD\n#\nisis\n is-level level-2\n network-entity 20.0000.0000.0004.00\n#\ninterface GigabitEthernet1/0/3\n undo shutdown\n ip address 192.168.0.2 255.255.255.0\n isis enable\n#\ninterface LoopBack0\n ip address 172.16.1.1 255.255.255.255\n isis enable\n#\nreturn",
+    "Controller": "#\nsysname Controller\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 1.1.1.2 255.255.255.0\n#\nbgp\n peer 1.1.1.1 as-number 100\n # ipv4-family unicast\n  undo synchronization\n  peer 1.1.1.1 enable\n # link-state-family unicast\n  peer 1.1.1.1 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-162配置BGP-LS组网图.png"
+  ]
+}

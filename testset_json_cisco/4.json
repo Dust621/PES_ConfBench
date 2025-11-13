@@ -1,0 +1,12 @@
+{
+  "topology": "两台路由器 R1、R2 在同一自治系统 AS600，中间通过网络 192.168.0.0/30 链接。R1 有附属网络 10.10.10.0/24，R2 有 10.10.20.0/24。",
+  "requirement": "在 AS600 内使用 OSPF 多区域部署，R1 接入 area 0 和 area 10，R2 接入 area 10。要求 area 10 的路由器通过 backbone area 0 到达其它区域。两个附属网络必须互通。",
+  "verification": "在 R1 执行 show ip ospf database 应看到 area 10 的链路状态；R1 ping 10.10.20.1 成功。",
+  "verification_tasks": [
+    { "type": "ospf_area_contains", "area": "0", "nodes": ["R1"], "description": "R1 接入 backbone area 0" },
+    { "type": "ospf_area_contains", "area": "10", "nodes": ["R1","R2"], "description": "R1、R2 接入 area 10" },
+    { "type": "ospf_abr_present", "node": "R1", "areas": ["0","10"], "description": "R1 作为 ABR 连接 area 0 与 area 10" },
+    { "type": "ospf_lsa_summary_present", "from_area": "0", "to_area": "10", "node": "R1", "description": "area 10 通过 backbone 引入汇总 LSA" },
+    { "type": "reachability", "src_node": "R1", "dst_ip": "10.10.20.1", "description": "R1 可达 R2 的主机" }
+  ]
+}

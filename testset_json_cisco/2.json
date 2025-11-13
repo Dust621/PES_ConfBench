@@ -1,0 +1,12 @@
+{
+  "topology": "三台路由器 R1、R2、R3，全部在同一个 AS300。R1 与 R2 通过 10.0.12.0/30 链接，R2 与 R3 通过 10.0.23.0/30 链接。R1 有网络 172.16.1.0/24，R3 有网络 172.16.3.0/24。",
+  "requirement": "在 AS300 内使用 OSPF 单一区域（area 0）建立邻居，所有路由器必须彼此可达，R1 的网络应在 R3 可见，R3 的网络应在 R1 可见。",
+  "verification": "在任意一台路由器上执行 show ip ospf neighbor 应显示两个邻居；执行 show ip route 在 R1 上应看到 172.16.3.0/24 路由。",
+  "verification_tasks": [
+    { "type": "ospf_neighbor_count", "node": "R2", "expect": 2, "description": "R2 在 area 0 上应与 R1、R3 建立邻居" },
+    { "type": "ospf_area_contains", "area": "0", "nodes": ["R1","R2","R3"], "description": "三台路由器均在 OSPF area 0" },
+    { "type": "route_exists", "node": "R1", "network": "172.16.3.0/24", "description": "R1 的路由表应有 R3 的 LAN" },
+    { "type": "route_exists", "node": "R3", "network": "172.16.1.0/24", "description": "R3 的路由表应有 R1 的 LAN" },
+    { "type": "reachability", "src_node": "R1", "dst_ip": "172.16.3.1", "description": "R1 可达 R3 的主机" }
+  ]
+}

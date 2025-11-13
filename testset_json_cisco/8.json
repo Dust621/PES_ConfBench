@@ -1,0 +1,30 @@
+{
+  "topology": "两台路由器 R1、R2 在同一 AS1200，通过 192.0.2.0/30 链接。R1 有网络 192.0.2.4/30，R2 有网络 192.0.2.8/30。",
+  "requirement": "在 AS1200 内使用 OSPF，并且从 OSPF 将特定内部前缀向外通过 BGP 重新分配。R1 要将 192.0.2.4/30 重分配到 BGP，R2 接收并通告至其他 BGP 邻居（假设存在外部）。",
+  "verification": "在 R1 执行 show router ospf redistribut ed 检查是否有 OSPF 到 BGP 的 redistribute 命令；在 BGP 邻居端看到该前缀可达。",
+  "verification_tasks": [
+    {
+      "type": "ospf_neighbor",
+      "description": "R1、R2 之间 OSPF 邻居建立（area 未指定则默认同一 area）"
+    },
+    {
+      "type": "bgp_rib_contains",
+      "node": "R2",
+      "prefix": "192.0.2.4/30",
+      "description": "R2 的 BGP RIB 中应学习到 192.0.2.4/30"
+    },
+    {
+      "type": "bgp_session_between",
+      "a_node": "R1",
+      "b_node": "R2",
+      "expect": "ESTABLISHED",
+      "description": "R1↔R2 建立 iBGP/eBGP 会话（用于 R2 接收并转发前缀）"
+    },
+    {
+      "type": "bgp_advertised_contains",
+      "node": "R1",
+      "prefix": "192.0.2.4/30",
+      "description": "R1 将 192.0.2.4/30 通过 BGP 通告给对等体"
+    }
+  ]
+}

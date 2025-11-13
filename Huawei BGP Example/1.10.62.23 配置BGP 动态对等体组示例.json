@@ -1,0 +1,20 @@
+{
+  "topology": "网络拓扑包含5台路由器设备，分布在两个自治系统中：\n\n**自治系统配置：**\n- AS 65008：包含DeviceA、DeviceD、DeviceE\n- AS 65009：包含DeviceB、DeviceC\n\n**设备连接关系：**\n- DeviceA作为核心设备，具有4个GigabitEthernet接口：\n  - interface1 (10.1.1.1/24) 连接 DeviceB的interface1 (10.1.1.2/24)\n  - interface2 (10.1.2.1/24) 连接 DeviceC的interface1 (10.1.2.2/24)\n  - interface3 (10.2.1.1/24) 连接 DeviceD的interface1 (10.2.1.2/24)\n  - interface4 (10.2.2.1/24) 连接 DeviceE的interface1 (10.2.2.2/24)\n\n**IP地址分配：**\n- 跨AS连接使用10.1.0.0/16网段：10.1.1.0/24和10.1.2.0/24子网\n- AS内部连接使用10.2.0.0/16网段：10.2.1.0/24和10.2.2.0/24子网\n\n**BGP配置特性：**\n- DeviceA配置动态对等体功能，设置两个监听组：\n  - 组a：内部对等体组，监听10.2.0.0/16网段的IBGP连接请求\n  - 组b：外部对等体组，监听10.1.0.0/16网段来自AS 65009的EBGP连接请求\n- DeviceB和DeviceC主动向DeviceA建立EBGP对等体关系\n- DeviceD和DeviceE主动向DeviceA建立IBGP对等体关系\n- 所有BGP会话在IPv4单播地址族下激活",
+  "requirement": "在BGP网络中，多个对等体经常发生变动，邻居的建立情况随之发生变动。配置BGP动态对等体功能，使BGP侦听指定网段的BGP连接请求并动态建立BGP对等体，同时将这些对等体加入到同一个动态对等体组中。这样当对等体发生变动时，无需在本端进行增加或删除BGP对等体的配置，减少网络维护的工作量。",
+  "steps": [
+    "在DeviceA上配置IBGP动态对等体组，侦听10.2.0.0/16网段的BGP连接请求。",
+    "在DeviceA上配置EBGP动态对等体组，侦听10.1.0.0/16网段的BGP连接请求。",
+    "DeviceD、DeviceE上分别与DeviceA配置IBGP连接。",
+    "DeviceB、DeviceC上分别与DeviceA配置EBGP连接。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/2\n undo shutdown\n ip address 10.1.2.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/3\n undo shutdown\n ip address 10.2.1.1 255.255.255.0\n#\ninterface GigabitEthernet1/0/4\n undo shutdown\n ip address 10.2.2.1 255.255.255.0\n#\nbgp 65008\n bgp dynamic-session-limit\n group a listen internal\n peer a listen-net 10.2.0.0 255.255.0.0\n group b listen external\n peer b listen-as 65009\n peer b listen-net 10.1.0.0 255.255.0.0\n#\n ipv4-family unicast\n  peer a enable\n  peer b enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n#\nbgp 65009\n peer 10.1.1.1 as-number 65008\n#\n ipv4-family unicast\n  peer 10.1.1.1 enable\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.1.2.2 255.255.255.0\n#\nbgp 65009\n peer 10.1.2.1 as-number 65008\n#\n ipv4-family unicast\n  peer 10.1.2.1 enable\n#\nreturn",
+    "DeviceD": "#\nsysname DeviceD\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.2.1.2 255.255.255.0\n#\nbgp 65008\n peer 10.2.1.1 as-number 65008\n#\n ipv4-family unicast\n  peer 10.2.1.1 enable\n#\nreturn",
+    "DeviceE": "#\nsysname DeviceE\n#\ninterface GigabitEthernet1/0/1\n undo shutdown\n ip address 10.2.2.2 255.255.255.0\n#\nbgp 65008\n peer 10.2.2.1 as-number 65008\n#\n ipv4-family unicast\n  peer 10.2.2.1 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-165 配置BGP动态对等体组组网图.png"
+  ]
+}

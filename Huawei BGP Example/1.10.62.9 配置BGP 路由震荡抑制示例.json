@@ -1,0 +1,17 @@
+{
+  "topology": "本网络拓扑由四台路由器设备组成，分别部署在不同的自治系统中：\n\n**设备部署：**\n- DeviceA：位于AS100，router-id 1.1.1.1\n- DeviceB：位于AS200，router-id 2.2.2.2  \n- DeviceC：位于AS300，router-id 3.3.3.3，作为中心汇聚节点\n- DeviceD：位于AS400，router-id 4.4.4.4\n\n**物理连接和接口配置：**\n- DeviceA与DeviceC通过interface1连接：DeviceA(10.10.1.1/24) ↔ DeviceC(10.10.1.2/24)\n- DeviceB与DeviceC通过interface1连接：DeviceB(10.10.2.1/24) ↔ DeviceC(10.10.2.2/24)\n- DeviceC与DeviceD通过interface3连接：DeviceC(10.10.3.2/24) ↔ DeviceD(10.10.3.1/24)\n\n**业务网段：**\n- DeviceA通过interface2发布业务网段：172.16.1.0/24\n- DeviceB通过interface2发布业务网段：192.168.1.0/24\n\n**BGP协议配置：**\nDeviceC作为中心节点，与其他三个AS建立EBGP邻居关系：\n- AS300-AS100：peer 10.10.1.1 as-number 100\n- AS300-AS200：peer 10.10.2.1 as-number 200  \n- AS300-AS400：peer 10.10.3.1 as-number 400\n\n**路由震荡抑制策略：**\nDeviceC针对不同EBGP邻居路由实施差异化震荡抑制：\n- 针对AS100路由（172.16.1.0/24）：抑制阈值10，抑制时间1000，最大抑制时间2000\n- 针对AS200路由（192.168.1.0/24）：抑制阈值10，抑制时间800，最大抑制时间3000\n\n该拓扑采用星型结构，DeviceC作为核心转发节点，通过BGP震荡抑制机制提升网络稳定性。",
+  "requirement": "针对不同的 EBGP 邻居路由，DeviceC 应用不同的路由抑制策略。通过配置 BGP 震荡抑制，可以抑制不稳定的路由信息，增加网络的稳定性。",
+  "steps": [
+    "在 DeviceA 和 DeviceC、DeviceB 和 DeviceC、DeviceD 和 DeviceC 之间分别配置 EBGP 连接。",
+    "在 DeviceC 上配置路由抑制策略，查看路由信息。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.10.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 172.16.1.1 255.255.255.0\n#\nbgp 100\n router-id 1.1.1.1\n peer 10.10.1.2 as-number 300\n #\n ipv4-family unicast\n  undo synchronization\n  network 172.16.1.0 255.255.255.0\n  peer 10.10.1.2 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.10.2.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 192.168.1.1 255.255.255.0\n#\nbgp 200\n router-id 2.2.2.2\n peer 10.10.2.2 as-number 300\n #\n ipv4-family unicast\n  undo synchronization\n  network 192.168.1.0 255.255.255.0\n  peer 10.10.2.2 enable\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.10.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.10.2.2 255.255.255.0\n#\ninterface GigabitEthernet3/0/0\n undo shutdown\n ip address 10.10.3.2 255.255.255.0\n#\nbgp 300\n router-id 3.3.3.3\n peer 10.10.1.1 as-number 100\n peer 10.10.2.1 as-number 200\n peer 10.10.3.1 as-number 400\n #\n ipv4-family unicast\n  undo synchronization\n  dampening route-policy dampen-policy\n  peer 10.10.1.1 enable\n  peer 10.10.2.1 enable\n  peer 10.10.3.1 enable\n#\nip ip-prefix prefix-a index 10 permit 172.16.1.0 24\n#\nip ip-prefix prefix-b index 20 permit 192.168.1.0 24\n#\nroute-policy dampen-policy permit node 10\n if-match ip-prefix prefix-a\n apply dampening 10 1000 2000\n#\nroute-policy dampen-policy permit node 20\n if-match ip-prefix prefix-b\n apply dampening 10 800 3000\n#\nreturn",
+    "DeviceD": "#\nsysname DeviceD\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.10.3.1 255.255.255.0\n#\nbgp 400\n router-id 4.4.4.4\n peer 10.10.3.2 as-number 300\n #\n ipv4-family unicast\n  undo synchronization\n  peer 10.10.3.2 enable\n#\nreturn"
+  },
+  "related_images": [
+    "图1-151 配置BGP 路由震荡抑制组网图.png"
+  ]
+}

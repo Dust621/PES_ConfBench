@@ -1,0 +1,17 @@
+{
+  "topology": "网络拓扑由三台路由器组成：DeviceA（AS 100）、DeviceB（AS 200）和DeviceC（AS 200）。\n\n物理连接关系：\n- DeviceA interface1（10.20.1.1/24）直连DeviceB interface2（10.20.1.2/24）\n- DeviceA interface2（10.20.2.1/24）直连DeviceC interface2（10.20.2.2/24）  \n- DeviceB interface1（10.1.1.1/24）直连DeviceC interface1（10.1.1.2/24）\n- DeviceB interface3（172.16.1.1/24）连接外部网络\n\nBGP邻居关系：\n- DeviceA与DeviceB建立EBGP邻居（10.20.1.1 ↔ 10.20.1.2），配置BFD快速故障检测\n- DeviceA与DeviceC建立EBGP邻居（10.20.2.1 ↔ 10.20.2.2）\n- DeviceB与DeviceC建立IBGP邻居（10.1.1.1 ↔ 10.1.1.2）\n\n路径选择机制：\n- DeviceB通过route-policy对DeviceA设置cost 100\n- DeviceC通过route-policy对DeviceA设置cost 150\n- 正常情况下主路径：DeviceA → DeviceB（cost 100）\n- 故障切换备份路径：DeviceA → DeviceC → DeviceB（cost 150）\n\nBFD配置在DeviceA和DeviceB的EBGP邻居上，检测参数为发送间隔100ms、接收间隔100ms、检测倍数4，实现链路故障的快速检测和业务切换。",
+  "requirement": "为了保障业务传输的稳定性，网络部署成主备备份链路。当主链路故障时，用户希望BGP协议能够快速感知，并且及时把业务切换到备份链路上。配置动态BFD for BGP功能，使用BFD检测DeviceA和DeviceB之间的BGP邻居关系，当DeviceA和DeviceB之间的链路发生故障时，BFD能够快速检测到故障并通告给BGP协议，使业务流量使用备份链路传送。",
+  "steps": [
+    "在各路由器上配置BGP基本功能。",
+    "配置MED属性控制路由的选路功能。",
+    "在DeviceA和DeviceB上使能BFD检测机制。"
+  ],
+  "configs": {
+    "DeviceA": "#\nsysname DeviceA\n#\nbfd\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.20.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.20.2.1 255.255.255.0\n#\nbgp 100\n router-id 1.1.1.1\n peer 10.20.1.2 as-number 200\n peer 10.20.1.2 ebgp-max-hop 255\n peer 10.20.1.2 bfd min-tx-interval 100 min-rx-interval 100 detect-multiplier 4\n peer 10.20.1.2 bfd enable\n peer 10.20.2.2 as-number 200\n peer 10.20.2.2 ebgp-max-hop 255\n#\n ipv4-family unicast\n  undo synchronization\n  peer 10.20.1.2 enable\n  peer 10.20.2.2 enable\n#\nreturn",
+    "DeviceB": "#\nsysname DeviceB\n#\nbfd\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.1 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.20.1.2 255.255.255.0\n#\ninterface GigabitEthernet3/0/0\n undo shutdown\n ip address 172.16.1.1 255.255.255.0\n#\nbgp 200\n router-id 2.2.2.2\n peer 10.1.1.2 as-number 200\n peer 10.20.1.1 as-number 100\n peer 10.20.1.1 ebgp-max-hop 255\n peer 10.20.1.1 bfd min-tx-interval 100 min-rx-interval 100 detect-multiplier 4\n peer 10.20.1.1 bfd enable\n#\n ipv4-family unicast\n  undo synchronization\n  network 172.16.1.0 255.255.255.0\n  peer 10.1.1.2 enable\n  peer 10.20.1.1 enable\n  peer 10.20.1.1 route-policy 10 export\n#\nroute-policy 10 permit node 10\n apply cost 100\n#\nreturn",
+    "DeviceC": "#\nsysname DeviceC\n#\nbfd\n#\ninterface GigabitEthernet1/0/0\n undo shutdown\n ip address 10.1.1.2 255.255.255.0\n#\ninterface GigabitEthernet2/0/0\n undo shutdown\n ip address 10.20.2.2 255.255.255.0\n#\nbgp 200\n router-id 3.3.3.3\n peer 10.1.1.1 as-number 200\n peer 10.20.2.1 as-number 100\n peer 10.20.2.1 ebgp-max-hop 255\n#\n ipv4-family unicast\n  undo synchronization\n  peer 10.1.1.1 enable\n  peer 10.20.2.1 enable\n  peer 10.20.2.1 route-policy 10 export\n#\nroute-policy 10 permit node 10\n apply cost 150\n#\nreturn"
+  },
+  "related_images": [
+    "图1-157配置BFDforBGP组网图.png"
+  ]
+}
