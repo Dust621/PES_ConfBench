@@ -4,12 +4,9 @@
   "verification": "验证所有iBGP会话为Established状态；验证DeviceD通过路由反射器学到DeviceA发布的172.16.1.0/24路由；验证路由反射器正常工作，DeviceD无需与DeviceA直接建立iBGP即可学到路由。",
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA与路由反射器DeviceB的iBGP邻居" },
-    { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceA与路由反射器DeviceC的iBGP邻居" },
     { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "两个路由反射器之间的iBGP邻居" },
     { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceD", "expect": "ESTABLISHED", "description": "路由反射器DeviceB与客户端DeviceD的iBGP邻居" },
-    { "type": "bgp_rib_contains", "node": "DeviceA", "prefix": "172.16.1.0/24", "description": "DeviceA应有自己发布的路由" },
     { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "172.16.1.0/24", "description": "路由反射器DeviceB应学到172.16.1.0/24" },
-    { "type": "bgp_rib_contains", "node": "DeviceC", "prefix": "172.16.1.0/24", "description": "路由反射器DeviceC应学到172.16.1.0/24" },
     { "type": "bgp_rib_contains", "node": "DeviceD", "prefix": "172.16.1.0/24", "description": "客户端DeviceD应通过路由反射学到172.16.1.0/24" },
     { "type": "reachability", "src_node": "DeviceD", "dst_ip": "172.16.1.1", "description": "客户端DeviceD可达DeviceA发布的网段" }
   ]

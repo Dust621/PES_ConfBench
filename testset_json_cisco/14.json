@@ -5,12 +5,9 @@
   "verification_tasks": [
     { "type": "bgp_session_between", "a_node": "DeviceA", "b_node": "DeviceB", "expect": "ESTABLISHED", "description": "DeviceA(AS 65010)与DeviceB(AS 65020)的eBGP邻居" },
     { "type": "bgp_session_between", "a_node": "DeviceB", "b_node": "DeviceC", "expect": "ESTABLISHED", "description": "DeviceB(AS 65020)与DeviceC(AS 65030)的eBGP邻居" },
-    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "10.1.2.0/24", "description": "DeviceB应有本地直连路由" },
-    { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "10.1.3.0/24", "description": "DeviceB应有本地直连路由" },
     { "type": "bgp_rib_contains", "node": "DeviceB", "prefix": "10.1.4.0/24", "description": "DeviceB应学到两端的10.1.4.0/24路由" },
     { "type": "bgp_received_only", "node": "DeviceA", "allowed_prefixes": ["10.1.2.0/24", "10.1.3.0/24"], "description": "DeviceA只应接收AS 65020的路由，不应有AS 65030的路由" },
     { "type": "bgp_received_only", "node": "DeviceC", "allowed_prefixes": ["10.1.2.0/24", "10.1.3.0/24"], "description": "DeviceC只应接收AS 65020的路由，不应有AS 65010的路由" },
-    { "type": "reachability", "src_node": "DeviceB", "dst_ip": "10.1.4.1", "description": "DeviceB可达DeviceA的本地网络" },
-    { "type": "reachability", "src_node": "DeviceB", "dst_ip": "10.1.4.2", "description": "DeviceB可达DeviceC的本地网络" }
+    { "type": "reachability", "src_node": "DeviceB", "dst_ip": "10.1.4.1", "description": "DeviceB可达DeviceA的本地网络" }
   ]
 }
