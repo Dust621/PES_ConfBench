@@ -1,0 +1,112 @@
+{
+  "processed_at": "2025-12-04T12:41:57.753221",
+  "processor_version": "2.0_fixed",
+  "total_labs": 10,
+  "successful": 10,
+  "failed": 0,
+  "total_tasks": 225,
+  "total_errors": 1,
+  "duration_seconds": 6808.771226,
+  "labs": [
+    {
+      "lab_id": "lab01",
+      "lab_name": "Lab 1",
+      "status": "success",
+      "num_tasks": 21,
+      "num_corrected": 21,
+      "num_errors": 0,
+      "config_count": 21,
+      "verification_count": 20
+    },
+    {
+      "lab_id": "lab02",
+      "lab_name": "Lab 2",
+      "status": "success",
+      "num_tasks": 23,
+      "num_corrected": 23,
+      "num_errors": 1,
+      "config_count": 20,
+      "verification_count": 17
+    },
+    {
+      "lab_id": "lab03",
+      "lab_name": "Lab 3",
+      "status": "success",
+      "num_tasks": 25,
+      "num_corrected": 25,
+      "num_errors": 0,
+      "config_count": 25,
+      "verification_count": 17
+    },
+    {
+      "lab_id": "lab04",
+      "lab_name": "Lab 4",
+      "status": "success",
+      "num_tasks": 22,
+      "num_corrected": 22,
+      "num_errors": 0,
+      "config_count": 22,
+      "verification_count": 17
+    },
+    {
+      "lab_id": "lab05",
+      "lab_name": "Lab 5",
+      "status": "success",
+      "num_tasks": 22,
+      "num_corrected": 22,
+      "num_errors": 0,
+      "config_count": 22,
+      "verification_count": 19
+    },
+    {
+      "lab_id": "lab06",
+      "lab_name": "Lab 6",
+      "status": "success",
+      "num_tasks": 22,
+      "num_corrected": 22,
+      "num_errors": 0,
+      "config_count": 22,
+      "verification_count": 16
+    },
+    {
+      "lab_id": "lab07",
+      "lab_name": "Lab 7",
+      "status": "success",
+      "num_tasks": 24,
+      "num_corrected": 24,
+      "num_errors": 0,
+      "config_count": 24,
+      "verification_count": 16
+    },
+    {
+      "lab_id": "lab08",
+      "lab_name": "Lab 8",
+      "status": "success",
+      "num_tasks": 24,
+      "num_corrected": 24,
+      "num_errors": 0,
+      "config_count": 24,
+      "verification_count": 18
+    },
+    {
+      "lab_id": "lab09",
+      "lab_name": "Lab 9",
+      "status": "success",
+      "num_tasks": 23,
+      "num_corrected": 23,
+      "num_errors": 0,
+      "config_count": 23,
+      "verification_count": 19
+    },
+    {
+      "lab_id": "lab10",
+      "lab_name": "Lab 10",
+      "status": "success",
+      "num_tasks": 19,
+      "num_corrected": 19,
+      "num_errors": 0,
+      "config_count": 19,
+      "verification_count": 17
+    }
+  ]
+}
